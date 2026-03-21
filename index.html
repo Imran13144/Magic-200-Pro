@@ -287,6 +287,10 @@
             border-top: 1px solid rgba(255,255,255,0.3);
             display: flex; align-items: center; justify-content: space-around;
             padding: 0 20px; z-index: 1600;
+            /* Added margin and transform to move buttons a bit higher */
+            margin-top: -10px;
+            position: relative;
+            transform: translateY(-5px);
         }
 
         .dice-area { width: 80px; height: 80px; perspective: 1000px; cursor: pointer; }
@@ -559,9 +563,9 @@
             </div>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 5px;">
-            <button class="ui-btn" onclick="changeZoom(0.1)" style="width:35px; height:35px; font-weight:bold;">+</button>
-            <button class="ui-btn" onclick="changeZoom(-0.1)" style="width:35px; height:35px; font-weight:bold;">-</button>
+        <div style="display: flex; flex-direction: row; gap: 8px; align-items: center;">
+            <button class="ui-btn" onclick="changeZoom(0.1)" style="width:40px; height:40px; font-weight:bold;">+</button>
+            <button class="ui-btn" onclick="changeZoom(-0.1)" style="width:40px; height:40px; font-weight:bold;">-</button>
         </div>
         
         <div class="dice-area" id="dice-trigger">
