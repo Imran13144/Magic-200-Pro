@@ -26,6 +26,8 @@
             height: 100vh; overflow: hidden;
             display: flex; flex-direction: column;
             user-select: none;
+            /* FIX: Prevents pull-to-refresh on mobile when scrolling the board down */
+            overscroll-behavior-y: none;
         }
 
         /* --- MODERN HEADER --- */
@@ -1245,37 +1247,4 @@
             
             overlay.style.display = 'flex'; 
 
-            const container = document.getElementById('confetti-container');
-            container.innerHTML = '';
-            for(let i=0; i<100; i++) {
-                const conf = document.createElement('div');
-                conf.className = 'confetti';
-                conf.style.left = Math.random() * 100 + 'vw';
-                conf.style.backgroundColor = CONFIG.colors[Math.floor(Math.random() * CONFIG.colors.length)];
-                conf.style.animationDelay = Math.random() * 3 + 's';
-                container.appendChild(conf);
-            }
-
-            // Firework & Racket Animation
-            const fwContainer = document.getElementById('fireworks-container');
-            const racket = document.getElementById('racket-icon');
-            racket.style.display = 'block';
-            racket.classList.add('racket-anim');
-            
-            let fwCount = 0;
-            const fwInterval = setInterval(() => {
-                if(fwCount >= 10) { clearInterval(fwInterval); return; }
-                const fw = document.createElement('div');
-                fw.className = 'firework';
-                fw.style.left = Math.random() * 100 + '%';
-                fw.style.top = Math.random() * 100 + '%';
-                fw.style.backgroundColor = CONFIG.colors[Math.floor(Math.random() * 10)];
-                fwContainer.appendChild(fw);
-                playSound('firework');
-                setTimeout(() => fw.remove(), 1000);
-                fwCount++;
-            }, 500);
-        }
-    </script>
-</body>
-</html>
+            const
