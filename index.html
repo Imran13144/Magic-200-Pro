@@ -26,7 +26,7 @@
             height: 100vh; overflow: hidden;
             display: flex; flex-direction: column;
             user-select: none;
-            /* FIX: Prevents pull-to-refresh on mobile when scrolling the board down */
+            /* Prevent pull-to-refresh on mobile */
             overscroll-behavior-y: none;
         }
 
@@ -167,6 +167,8 @@
             border: 5px solid #ecf0f1;
             box-shadow: 0 0 50px rgba(0,0,0,0.5);
             perspective: 1500px;
+            /* Prevent pull-to-refresh on this scrollable container */
+            overscroll-behavior-y: none;
         }
         #board-wrapper { 
             transform-style: preserve-3d; 
@@ -642,6 +644,9 @@
             updateOnlineStatus();
             setInterval(updateOnlineStatus, 5000);
             document.getElementById('player-count').addEventListener('input', updateNameInputs);
+            
+            // NEW ADDITION: Initialize touch scrolling for mobile to prevent page refresh and slide smoothly
+            initTouchScroll();
         }
 
         function switchAuth(type) {
@@ -1247,4 +1252,64 @@
             
             overlay.style.display = 'flex'; 
 
-            const
+            const container = document.getElementById('confetti-container');
+            container.innerHTML = '';
+            for(let i=0; i<100; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.backgroundColor = CONFIG.colors[Math.floor(Math.random() * CONFIG.colors.length)];
+                conf.style.animationDelay = Math.random() * 3 + 's';
+                container.appendChild(conf);
+            }
+
+            // Firework & Racket Animation
+            const fwContainer = document.getElementById('fireworks-container');
+            const racket = document.getElementById('racket-icon');
+            racket.style.display = 'block';
+            racket.classList.add('racket-anim');
+            
+            let fwCount = 0;
+            const fwInterval = setInterval(() => {
+                if(fwCount >= 10) { clearInterval(fwInterval); return; }
+                const fw = document.createElement('div');
+                fw.className = 'firework';
+                fw.style.left = Math.random() * 100 + '%';
+                fw.style.top = Math.random() * 100 + '%';
+                fw.style.backgroundColor = CONFIG.colors[Math.floor(Math.random() * 10)];
+                fwContainer.appendChild(fw);
+                playSound('firework');
+                setTimeout(() => fw.remove(), 1000);
+                fwCount++;
+            }, 500);
+        }
+
+        // NEW ADDITION: Function to handle touch based sliding on game board
+        function initTouchScroll() {
+            const container = document.getElementById('game-container');
+            let startY = 0;
+            let startX = 0;
+            let scrollTop = 0;
+            let scrollLeft = 0;
+
+            container.addEventListener('touchstart', (e) => {
+                startY = e.touches[0].pageY - container.offsetTop;
+                startX = e.touches[0].pageX - container.offsetLeft;
+                scrollTop = container.scrollTop;
+                scrollLeft = container.scrollLeft;
+            }, { passive: true });
+
+            container.addEventListener('touchmove', (e) => {
+                const y = e.touches[0].pageY - container.offsetTop;
+                const x = e.touches[0].pageX - container.offsetLeft;
+                const walkY = (y - startY); 
+                const walkX = (x - startX); 
+                
+                // Scrolling the container smoothly
+                container.scrollTop = scrollTop - walkY;
+                container.scrollLeft = scrollLeft - walkX;
+            }, { passive: true });
+        }
+    </script>
+</body>
+</html>
