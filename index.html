@@ -2,1314 +2,1299 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Magic 200 Board Game 3D - Realistic Pro Edition</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Merge Math Game</title>
     <style>
-        :root {
-            --red: #ff5252; --blue: #448aff; --green: #4caf50; --yellow: #ffd740;
-            --orange: #ffab40; --pink: #ff4081; --purple: #e040fb; --cyan: #18ffff;
-            --lgreen: #b2ff59; --skyblue: #40c4ff;
-            --magic-glow: rgba(224, 64, 251, 0.6);
-            --glass: rgba(255, 255, 255, 0.85);
-            --sidebar-width: 280px;
-        }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-
         body {
-            margin: 0; padding: 0;
-            font-family: 'Poppins', sans-serif;
-            background: radial-gradient(circle, #455a64 0%, #263238 100%);
-            height: 100vh; overflow: hidden;
-            display: flex; flex-direction: column;
+            /* NAYA CODE: Background ko 3D Colorful aur Animated banaya gaya hai */
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
             user-select: none;
-            /* Prevent pull-to-refresh on mobile */
-            overscroll-behavior-y: none;
+            /* 3D Depth ke liye halka sa inner shadow */
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.2);
+
+            /* APK OPTIMIZATION: Pull-to-refresh disable karne ke liye */
+            overscroll-behavior-y: contain;
+            touch-action: none;
         }
 
-        /* --- MODERN HEADER --- */
-        header {
-            background: var(--glass); backdrop-filter: blur(10px);
-            padding: 12px 25px;
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 3000;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            position: relative;
-        }
-        
-        .header-left { display: flex; align-items: center; gap: 20px; }
-        
-        .menu-toggle-btn {
-            background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #333;
-            display: flex; align-items: center; justify-content: center;
-        }
-
-        .profile-btn {
-            display: flex; align-items: center; gap: 12px;
-            cursor: pointer; background: rgba(0,0,0,0.05); padding: 6px 18px;
-            border-radius: 50px; border: 1.5px solid #448aff;
-            transition: 0.3s;
-        }
-        .profile-btn:hover { background: rgba(68, 138, 255, 0.1); }
-        
-        .avatar-circle {
-            width: 35px; height: 35px; border-radius: 50%;
-            object-fit: cover; border: 2px solid white; background: #eee;
-            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
-        }
-        #user-name-disp { font-weight: 600; color: #333; }
-
-        /* Wallet Styles */
-        .wallet-display {
-            background: #ffd740; color: #333; padding: 5px 15px; border-radius: 20px;
-            font-weight: 800; display: flex; align-items: center; gap: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        /* --- SIDEBAR --- */
-        #sidebar {
-            position: fixed; left: calc(-1 * var(--sidebar-width)); top: 0;
-            width: var(--sidebar-width); height: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            z-index: 4000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 10px 0 30px rgba(0,0,0,0.3);
-            display: flex; flex-direction: column; padding: 25px;
-            color: #333;
-        }
-        #sidebar.active { left: 0; }
-        .sidebar-header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 10px;
-        }
-        .sidebar-item {
-            padding: 15px; margin: 5px 0; border-radius: 12px;
-            display: flex; align-items: center; gap: 15px;
-            cursor: pointer; transition: 0.2s; font-weight: 500;
-        }
-        .sidebar-item:hover { background: rgba(68, 138, 255, 0.1); color: var(--blue); }
-        .sidebar-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
-            z-index: 3500; display: none; opacity: 0; transition: 0.3s;
-        }
-        .sidebar-overlay.active { display: block; opacity: 1; }
-
-        /* --- MENUS & OVERLAYS --- */
-        #menu, .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 20px; text-align: center; backdrop-filter: blur(8px);
-        }
-        .menu-title { 
-            font-size: 3rem; color: white; margin-bottom: 2rem; 
-            text-shadow: 0 0 20px var(--blue); font-weight: 900;
-        }
-        
-        .menu-btn {
-            padding: 16px 45px; margin: 12px; font-size: 1.2rem;
-            border: none; border-radius: 15px; cursor: pointer;
-            background: linear-gradient(135deg, var(--blue), var(--skyblue));
-            color: white; transition: 0.4s;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-            width: 100%; max-width: 300px; font-weight: 600;
-            position: relative;
-        }
-        .menu-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 10px 25px rgba(68,138,255,0.5); }
-        .menu-btn:disabled { background: #555 !important; cursor: not-allowed; transform: none; box-shadow: none; opacity: 0.7; }
-
-        .online-tag {
-            position: absolute; top: -10px; right: -10px;
-            background: #4caf50; color: white; font-size: 0.7rem;
-            padding: 2px 8px; border-radius: 10px; border: 2px solid white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            transition: 0.3s;
-        }
-        .online-tag.offline { background: #e74c3c; }
-
-        #offline-setup, #profile-modal, #global-setup, #signup-page, #login-page { display: none; z-index: 5000; }
-        .setup-card { 
-            background: white; padding: 30px; border-radius: 25px; 
-            width: 90%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            position: relative;
-        }
-        .setup-card input[type="text"], .setup-card input[type="number"], .setup-card input[type="password"] { 
-            width: 100%; padding: 12px; margin: 10px 0; 
-            border: 2px solid #eee; border-radius: 12px; font-size: 1rem;
-        }
-        
-        .pass-container { position: relative; }
-        .toggle-pass { position: absolute; right: 15px; top: 22px; cursor: pointer; font-size: 1.2rem; }
-
-        .image-upload-wrapper {
-            display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 15px;
-        }
-        #profile-preview {
-            width: 80px; height: 80px; border-radius: 50%; object-fit: cover;
-            border: 3px solid var(--blue);
-        }
-        .custom-file-upload {
-            background: #eee; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 0.9rem;
-        }
-
-        /* --- REALISTIC BOARD LAYOUT --- */
-        #game-container {
-            display: none;
-            position: relative;
-            width: 360px;
-            height: 600px;
-            margin: auto;
-            overflow: auto;
-            background: rgba(0,0,0,0.2);
-            border: 5px solid #ecf0f1;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
-            perspective: 1500px;
-            /* Prevent pull-to-refresh on this scrollable container */
-            overscroll-behavior-y: none;
-        }
-        #board-wrapper { 
-            transform-style: preserve-3d; 
-            position: absolute;
-            top: 0; left: 0;
-            transition: transform 0.3s ease;
-            transform-origin: top left;
-        }
-        #board {
-            display: grid; grid-template-columns: repeat(10, 65px); grid-template-rows: repeat(20, 65px);
-            background: #2c3e50; border: 10px solid #ecf0f1; border-radius: 8px;
-            position: relative; transform-style: preserve-3d;
-        }
-
-        .box {
-            width: 65px; height: 65px; border: 0.5px solid rgba(255,255,255,0.15);
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 900; color: #ffffff; 
-            font-size: 1.1rem; position: relative;
-            background-blend-mode: overlay;
-            text-shadow: 1px 1px 2px #000;
-            transform-style: preserve-3d;
-            z-index: 60;
-        }
-
-        #game-svg {
-            position: absolute; top: 0; left: 0;
-            width: 650px; height: 1300px;
-            pointer-events: none; z-index: 50;
-        }
-
-        .portal-tile { 
-            background: var(--magic-glow) !important; 
-            animation: portal-anim 3s infinite ease-in-out; 
-        }
-        @keyframes portal-anim {
-            0%, 100% { box-shadow: inset 0 0 10px #fff; opacity: 0.8; }
-            50% { box-shadow: inset 0 0 30px #fff; opacity: 1; }
-        }
-
-        .finish-box {
-            background: linear-gradient(45deg, #ff5252, #448aff, #4caf50, #ffd740, #ffab40, #ff4081, #e040fb, #18ffff, #b2ff59, #40c4ff) !important;
-            background-size: 400% 400% !important;
-            animation: finish-glow 5s linear infinite;
-            border: 4px solid gold !important;
-            z-index: 70;
-            color: white !important;
-            font-size: 1.2rem !important;
-            box-shadow: 0 0 25px gold;
-        }
-        @keyframes finish-glow {
+        /* Background Animation Logic */
+        @keyframes gradientBG {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
-        .snake-path {
-            animation: slither 3s infinite ease-in-out;
-            transform-origin: center;
+        .header {
+            text-align: center;
+            margin-bottom: 2%; /* px to % */
         }
-        @keyframes slither {
-            0%, 100% { transform: scale(1) translate(0, 0); }
-            50% { transform: scale(1.01) translate(2px, 2px); }
+        h1 {
+            color: #333;
+            font-size: 6vw; /* px to vw for title responsiveness */
+            margin: 0 0 1% 0;
+            /* Title ko thoda 3D look dene ke liye */
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.5);
         }
-
-        /* SNAKE EYE ANIMATION - REAL GLOW */
-        .snake-eye {
-            animation: snake-eye-glow 1.5s infinite alternate;
-            filter: drop-shadow(0 0 5px #fff);
+        .score-container {
+            background: #4A90E2;
+            color: white;
+            padding: 1% 5%; /* px to % */
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            display: inline-block;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        @keyframes snake-eye-glow {
-            0% { fill: #fff; opacity: 1; r: 2.5; filter: drop-shadow(0 0 2px #fff); }
-            100% { fill: #ffff00; opacity: 0.8; r: 3.5; filter: drop-shadow(0 0 10px #ffff00); }
-        }
-
-        .token {
-            width: 35px; height: 35px; position: absolute; z-index: 100;
-            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-            transform-style: preserve-3d; pointer-events: auto;
-        }
-        .horse { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; }
-        .horse-body { 
-            width: 20px; height: 35px; background: white; border-radius: 10px 10px 2px 2px;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.3); border: 2px solid rgba(0,0,0,0.1);
-            background-size: cover; background-position: center;
-        }
-        .horse-base { 
-            width: 28px; height: 8px; background: rgba(0,0,0,0.5); 
-            border-radius: 50%; position: absolute; bottom: -5px; filter: blur(2px);
-        }
-
-        /* --- ACTIVE TOKEN ANIMATION --- */
-        .token-selectable {
-            cursor: pointer;
-            animation: token-jump 0.6s infinite alternate;
-            z-index: 500;
-        }
-        @keyframes token-jump {
-            from { transform: translateY(0); }
-            to { transform: translateY(-15px); }
-        }
-
-        .ui-btn {
-            width: 50px; height: 50px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1);
-            background: #eee; color: #333; font-size: 1.4rem; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: 0.2s;
-        }
-        .ui-btn:active { transform: scale(0.9); }
         
-        .volume-container {
-            display: flex; align-items: center; gap: 8px;
-        }
-        #vol-slider {
-            width: 80px; cursor: pointer;
-        }
-
-        #bottom-panel {
-            height: 140px; background: var(--glass); backdrop-filter: blur(15px);
-            border-top: 1px solid rgba(255,255,255,0.3);
-            display: flex; align-items: center; justify-content: space-around;
-            padding: 0 20px; z-index: 1600;
-            /* Added margin and transform to move buttons a bit higher */
-            margin-top: -10px;
+        /* 6x6 Grid aur Bade Boxes ke liye CSS badlav */
+        #grid {
+            width: 90vw; /* px to vw for full screen adaptation */
+            height: 90vw; /* height square rakhne ke liye vw */
+            max-width: 420px; /* PC par zyada bada na ho */
+            max-height: 420px;
+            background-color: #34495e;
+            border-radius: 10px;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr); /* 4 ki jagah 6 columns */
+            grid-template-rows: repeat(6, 1fr); /* 4 ki jagah 6 rows */
+            gap: 2%; /* px to % */
+            padding: 2.5%; /* px to % */
+            box-sizing: border-box;
+            touch-action: none; /* Mobile swipe ke liye */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4), 0 0 15px rgba(255,255,255,0.1);
             position: relative;
-            transform: translateY(-5px);
+            perspective: 800px; /* 3D Effect support karne ke liye */
         }
-
-        .dice-area { width: 80px; height: 80px; perspective: 1000px; cursor: pointer; }
-        .dice {
-            width: 100%; height: 100%; position: relative; transform-style: preserve-3d;
-            transition: transform 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        .cell {
+            background-color: #2c3e50;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5vw; /* px to vw for dynamic text size */
+            font-weight: bold;
+            color: white;
+            /* Slide Animation ke liye transition */
+            transition: transform 0.15s ease-in-out, background-color 0.15s ease;
+            transform-style: preserve-3d;
+            position: relative;
+            /* 3D look for cells */
+            box-shadow: inset -2px -2px 5px rgba(0,0,0,0.3), inset 2px 2px 5px rgba(255,255,255,0.1);
         }
-        .dice-face {
-            position: absolute; width: 80px; height: 80px;
-            border: 2px solid rgba(255,255,255,0.5); border-radius: 15px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 2.2rem; font-weight: bold; color: white;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
-        }
-        .f1 { transform: rotateY(0deg) translateZ(40px); background: #e74c3c; }
-        .f2 { transform: rotateY(90deg) translateZ(40px); background: #3498db; }
-        .f3 { transform: rotateY(180deg) translateZ(40px); background: #2ecc71; }
-        .f4 { transform: rotateY(-90deg) translateZ(40px); background: #f1c40f; color: #333; }
-        .f5 { transform: rotateX(90deg) translateZ(40px); background: #e67e22; }
-        .f6 { transform: rotateX(-90deg) translateZ(40px); background: #9b59b6; }
-
-        #win-overlay { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; 
-            display: none; flex-direction: column; align-items: center; justify-content: center; 
-            color: white; text-align: center;
-        }
-        .confetti { position: absolute; width: 10px; height: 10px; border-radius: 50%; animation: fall 3s linear infinite; }
-        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
-
-        /* WIN ANIMATIONS */
-        .firework { position: absolute; width: 5px; height: 5px; border-radius: 50%; animation: explode 1s ease-out forwards; }
-        @keyframes explode {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(20); opacity: 0; }
-        }
-        .racket-anim { animation: racket-swing 0.5s infinite alternate; }
-        @keyframes racket-swing {
-            from { transform: rotate(-20deg); }
-            to { transform: rotate(20deg); }
-        }
-
-        @media (max-width: 600px) {
-            #game-container { width: 360px; height: 600px; }
-            #board { grid-template-columns: repeat(10, 42px); grid-template-rows: repeat(20, 42px); }
-            .box { width: 42px; height: 42px; font-size: 0.8rem; }
-            #game-svg { width: 420px; height: 840px; }
-            .dice-area { width: 60px; height: 60px; }
-            .dice-face { width: 60px; height: 60px; font-size: 1.5rem; }
-            .f1 { transform: rotateY(0deg) translateZ(30px); }
-            .f2 { transform: rotateY(90deg) translateZ(30px); }
-            .f3 { transform: rotateY(180deg) translateZ(30px); }
-            .f4 { transform: rotateY(-90deg) translateZ(30px); }
-            .f5 { transform: rotateX(90deg) translateZ(30px); }
-            .f6 { transform: rotateX(-90deg) translateZ(30px); }
-        }
-
-        .coin-btn {
-            background: #eee; border: 2px solid #ddd; padding: 10px; border-radius: 10px; 
-            cursor: pointer; font-weight: bold; font-size: 1rem;
-        }
-        .coin-btn.selected { background: #ffd740; border-color: orange; }
-
-        /* Multi-Goti Toggle Styling */
-        .token-count-container { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
-        .t-btn { padding: 8px 15px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .t-btn.selected { background: var(--blue); color: white; border-color: var(--blue); }
-
-        /* NEW: Score Slider Style */
-        #high-score-ticker {
-            background: #333; color: #ffd740; overflow: hidden; white-space: nowrap;
-            padding: 5px 0; font-size: 0.9rem; font-weight: bold; border-bottom: 1px solid #444;
-        }
-        .ticker-content { display: inline-block; animation: ticker 20s linear infinite; padding-left: 100%; }
-        @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
         
-        .history-list { max-height: 150px; overflow-y: auto; background: #f9f9f9; padding: 10px; border-radius: 10px; margin-top: 10px; text-align: left; font-size: 0.85rem; }
-        .history-item { border-bottom: 1px solid #eee; padding: 5px 0; color: #555; display: flex; justify-content: space-between; }
+        /* PC view ke liye font adjustment */
+        @media (min-width: 500px) {
+            .cell { font-size: 24px; }
+            h1 { font-size: 28px; }
+        }
+
+        /* Merge Animation (Pop effect) */
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        /* NAYA CODE: Number Join hone par 3D box effect aur Chamak (Glow) */
+        @keyframes glowAndPop3D {
+            0% { 
+                transform: scale(1) translateZ(0px) rotateX(0deg);
+            }
+            50% { 
+                transform: scale(1.25) translateZ(30px) rotateX(10deg) rotateY(10deg); /* 3D Pop up */
+            }
+            100% { 
+                transform: scale(1) translateZ(0px) rotateX(0deg);
+            }
+        }
+
+        /* Chamak tab tak bani rahegi jab tak doosra merge na ho */
+        .pop-effect {
+            animation: glowAndPop3D 0.4s ease-in-out;
+            box-shadow: 0 0 15px #00e5ff, 0 0 30px #00e5ff !important; /* Persistent Light Chamak */
+            z-index: 5;
+        }
+        
+        /* Alag alag numbers ke liye mast rang */
+        .n1 { background-color: #1abc9c; }
+        .n2 { background-color: #2ecc71; }
+        .n3 { background-color: #3498db; }
+        .n4 { background-color: #9b59b6; }
+        .n5 { background-color: #f1c40f; color: #333; }
+        .n6 { background-color: #e67e22; }
+        .n7 { background-color: #e74c3c; }
+        .n8 { background-color: #e84393; }
+        .n9 { background-color: #6c5ce7; }
+        .n10 { background-color: #00cec9; }
+
+        /* Naye bante hue numbers ke color code styles */
+        .n12 { background-color: #fd79a8; }
+        .n16 { background-color: #e17055; }
+
+        .controls {
+            margin-top: 4%; /* px to % */
+            text-align: center;
+        }
+        button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 2% 6%; /* px to % */
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .instructions {
+            margin-top: 2%; /* px to % */
+            color: #333; /* Darker for animated BG visibility */
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* NAYA CODE: SVG overlay board ke upar free-form line kheechnay ke liye */
+        #swipe-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        #drawing-line {
+            stroke: #00e5ff;
+            stroke-width: 6;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: drop-shadow(0 0 5px #00e5ff);
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+        /* Touch hone par highlight effect */
+        .selected-cell {
+            box-shadow: inset 0 0 10px rgba(255,255,255,0.8);
+            transform: scale(0.95);
+        }
+
+        /* NAYA CODE: Naye counters aur Game Over overlay ke liye CSS */
+        .header-stats {
+            display: flex;
+            gap: 2%; /* px to % */
+            justify-content: center;
+            margin-top: 1%; /* px to % */
+        }
+        .stat-box {
+            background: #4A90E2;
+            color: white;
+            padding: 1.5% 4%; /* px to % */
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        /* FIX CODE: Game over show hone ke liye isko global full overlay banaya gaya hai */
+        #game-over-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 5000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        #game-over-overlay h2 {
+            color: #e74c3c;
+            font-size: 10vw; /* px to vw */
+            margin-bottom: 3%;
+        }
+        #game-over-overlay p {
+            font-size: 5vw; /* px to vw */
+            margin-bottom: 5%;
+        }
+
+        /* NAYA CODE: Level Up 3D animation design */
+        #level-up-popup {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #fff;
+            padding: 5% 10%; /* px to % */
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px #FFD700;
+            text-align: center;
+            z-index: 100;
+            font-weight: bold;
+            pointer-events: none;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s;
+            opacity: 0;
+            width: 70%; /* Naya responsive width */
+        }
+        #level-up-popup.active {
+            transform: translate(-50%, -50%) scale(1.1) rotateY(360deg);
+            opacity: 1;
+        }
+        #level-up-popup h2 {
+            margin: 0;
+            font-size: 8vw; /* px to vw */
+            text-shadow: 2px 4px 5px rgba(0,0,0,0.3);
+        }
+        #level-up-popup p {
+            margin: 1% 0 0 0;
+            font-size: 5vw; /* px to vw */
+        }
+
+        /* NAYA CODE: Level box ke 1 second scroll animation ke liye */
+        @keyframes levelScroll {
+            0% { transform: translateY(0); }
+            25% { transform: translateY(-15px); }
+            50% { transform: translateY(10px); }
+            75% { transform: translateY(-5px); }
+            100% { transform: translateY(0); }
+        }
+        .level-scroll-anim {
+            animation: levelScroll 1s ease-in-out;
+        }
+
+        /* NAYA CODE: Sound on/off button ke liye CSS */
+        .sound-btn {
+            background-color: #9b59b6;
+            padding: 1.5% 3%; /* px to % */
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+        }
+
+        /* Back Button CSS */
+        .back-btn {
+            background-color: #7f8c8d;
+            padding: 1.5% 3%; /* px to % */
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --------------------------- */
+        /* NAYA CODE: AUTH & MENU UI (Image Based Modification) */
+        /* --------------------------- */
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        #auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(-45deg, #1abc9c, #2ecc71, #3498db, #9b59b6, #e67e22, #e74c3c);
+            background-size: 400% 400%;
+            animation: gradientShift 12s ease infinite;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .game-title-box {
+            margin-bottom: 5%; /* px to % */
+            text-align: center;
+        }
+        .game-title-box h1 {
+            color: #ffcc00;
+            font-size: 10vw; /* px to vw */
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px #ffcc00, 2px 2px 0px #000;
+            margin: 0;
+        }
+        .game-title-box span {
+            color: #ffffff;
+            font-size: 14px;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+        }
+
+        .auth-card {
+            background: #0f1c24;
+            padding: 8%; /* px to % */
+            border-radius: 5px;
+            border: 3px solid #b38f00;
+            box-shadow: 0 0 25px rgba(255, 204, 0, 0.3), inset 0 0 15px rgba(0,0,0,0.8);
+            width: 80%; /* px to % */
+            max-width: 320px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: -5px; left: -5px; right: -5px; bottom: -5px;
+            border: 1px solid #ffcc00;
+            pointer-events: none;
+            border-radius: 5px;
+        }
+        
+        .input-group {
+            margin-bottom: 4%; /* px to % */
+            text-align: left;
+            position: relative;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 3%; /* px to % */
+            background: #080f14;
+            border: 1px solid #1a3344;
+            border-radius: 3px;
+            box-sizing: border-box;
+            font-size: 14px;
+            color: #00e5ff;
+            outline: none;
+        }
+        
+        .auth-btn {
+            width: 100%;
+            background: linear-gradient(to bottom, #ffdb4d, #b38f00);
+            color: #000;
+            padding: 4%; /* px to % */
+            border-radius: 3px;
+            font-size: 18px;
+            margin-top: 5%; /* px to % */
+            border: 1px solid #ffe680;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0px #665200, 0 5px 10px rgba(0,0,0,0.5);
+        }
+
+        /* Mode Selection Styles */
+        #mode-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(-45deg, #1abc9c, #2ecc71, #3498db, #9b59b6, #e67e22, #e74c3c);
+            background-size: 400% 400%;
+            animation: gradientShift 12s ease infinite;
+            z-index: 900;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .mode-btn {
+            display: block;
+            width: 70%; /* px to % */
+            max-width: 260px;
+            padding: 5%; /* px to % */
+            margin: 4% auto; /* px to % */
+            border-radius: 10px;
+            font-size: 22px;
+            font-weight: bold;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        /* High Score Boxes */
+        .highscore-row {
+            display: flex;
+            justify-content: center;
+            gap: 3%; /* px to % */
+            margin-bottom: 4%; /* px to % */
+        }
+        .hs-box {
+            background: #ffffff;
+            width: 28%; /* px to % */
+            padding: 3% 1%; /* px to % */
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 2px solid #ddd;
+            text-align: center;
+        }
+
+        /* --------------------------- */
+        /* NAYA CODE: SIDEBARS & MODALS */
+        /* --------------------------- */
+        .left-sidebar {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 70%; /* px to % responsive */
+            max-width: 250px;
+            height: 100%;
+            background: #0f1c24;
+            border-right: 3px solid #b38f00;
+            z-index: 1500;
+            transition: left 0.3s ease;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            padding: 5% 4%; /* px to % */
+            box-sizing: border-box;
+        }
+        .left-sidebar.active {
+            left: 0;
+        }
+        .sidebar-btn {
+            background: #080f14;
+            color: #ffcc00;
+            border: 1px solid #1a3344;
+            padding: 5%; /* px to % */
+            margin-bottom: 3%; /* px to % */
+            border-radius: 3px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        #menu-trigger-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #0f1c24;
+            color: #ffcc00;
+            border: 2px solid #b38f00;
+            padding: 2% 4%; /* px to % */
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 850;
+            font-size: 14px;
+        }
+
+        .modal-card {
+            background: #0f1c24;
+            width: 85%; /* px to % */
+            max-width: 320px;
+            padding: 6%; /* px to % */
+            border-radius: 5px;
+            border: 3px solid #b38f00;
+            box-shadow: 0 0 25px rgba(255, 204, 0, 0.3);
+            text-align: center;
+            position: relative;
+        }
+        
+        .dashboard-row {
+            display: flex;
+            justify-content: space-between;
+            background: #080f14;
+            padding: 3%; /* px to % */
+            border-radius: 4px;
+            border: 1px solid #1a3344;
+            margin-bottom: 2%; /* px to % */
+        }
+        
+        .hs-profile-pic {
+            width: 10vw; /* px to vw */
+            height: 10vw;
+            max-width: 35px;
+            max-height: 35px;
+            border-radius: 50%;
+            margin: 0 auto 5px auto;
+            border: 2px solid #00e5ff;
+            display: block;
+            object-fit: cover;
+        }
+        
+        .profile-pic-container {
+            position: relative;
+            width: 25vw; /* px to vw */
+            height: 25vw;
+            max-width: 100px;
+            max-height: 100px;
+            margin: 0 auto 5% auto;
+            border-radius: 50%;
+            border: 3px solid #00e5ff;
+            overflow: hidden;
+            background: #080f14;
+        }
+        
+        /* Rest of existing classes maintain their relative properties */
+        .side-menu {
+            position: fixed;
+            top: 0;
+            right: -280px;
+            width: 250px;
+            height: 100%;
+            background: #0f1c24;
+            border-left: 3px solid #b38f00;
+            z-index: 1002;
+            transition: right 0.3s ease;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 15px;
+            box-sizing: border-box;
+        }
+        .side-menu.active {
+            right: 0;
+        }
+        .side-menu-btn {
+            background: #080f14;
+            color: #ffcc00;
+            border: 1px solid #1a3344;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 15px;
+            font-weight: bold;
+        }
+        .close-menu-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: auto;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close-btn {
+            position: absolute;
+            top: 10px; right: 10px;
+            color: #ffcc00;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .text-modal-content {
+            text-align: left;
+            color: #fff;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.5;
+            padding: 10px;
+            background: #080f14;
+            border: 1px solid #1a3344;
+            border-radius: 3px;
+        }
+        .sidebar-close-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: auto;
+        }
+        .eye-icon {
+            position: absolute;
+            right: 10px;
+            top: 28px;
+            cursor: pointer;
+            color: #ffcc00;
+            font-size: 18px;
+        }
+        .switch-text {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #999;
+        }
+        .switch-text span {
+            color: #00e5ff;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .extra-links {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-top: 5px;
+            color: #ffcc00;
+        }
+        .highscore-title {
+            color: #333;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .hs-box .rank-text { font-size: 12px; color: #7f8c8d; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
+        .hs-box .score-text { font-size: 20px; font-weight: bold; color: #2c3e50; }
+        .hs-box .user-text { font-size: 11px; color: #34495e; font-weight: bold; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .hs-box .mobile-text { font-size: 10px; color: #7f8c8d; }
+        .hs-first { border-color: #FFD700; background: linear-gradient(to bottom, #ffffff, #fffdf0); }
+        .hs-second { border-color: #C0C0C0; background: linear-gradient(to bottom, #ffffff, #f7f7f7); }
+        .hs-third { border-color: #CD7F32; background: linear-gradient(to bottom, #ffffff, #faf3ee); }
+        .hs-first .score-text { color: #d4af37; }
+        .hs-first .rank-text { color: #d4af37; }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
-<body onload="initApp()">
+<body>
 
-    <div id="high-score-ticker" style="display:none;">
-        <div class="ticker-content" id="ticker-text">🔥 TOP PLAYER: Loading... 🏆</div>
+    <div class="left-sidebar" id="left-sidebar-menu">
+        <h3>Menu</h3>
+        <button class="sidebar-btn" onclick="openMathMergeDashboard()">📊 Math Merge Data</button>
+        <button class="sidebar-btn" onclick="openProfileModalFromSidebar()">👤 Profile</button>
+        <button class="sidebar-btn" onclick="handleShareLink()">🔗 Share</button>
+        <button class="sidebar-btn" onclick="openGameRules()">📜 Game Rules</button>
+        <button class="sidebar-btn" onclick="openTermConditions()">📋 Terms & Conditions</button>
+        <button class="sidebar-btn" onclick="openWhatsAppHelp()">📞 Help</button>
+        <button class="sidebar-btn" onclick="handleLogout()">🚪 Logout</button>
+        <button class="sidebar-close-btn" onclick="toggleLeftSidebar(false)">Close Menu</button>
     </div>
 
-    <div id="signup-page" class="modal-overlay" style="display: flex;">
-        <div class="setup-card">
-            <h2 style="color:#333">Create Account</h2>
-            <input type="text" id="reg-name" placeholder="Full Name">
-            <input type="number" id="reg-phone" placeholder="Phone Number">
-            <div class="pass-container">
-                <input type="password" id="reg-pass" placeholder="Password">
-                <span class="toggle-pass" onclick="togglePassVisibility('reg-pass')">👁️</span>
-            </div>
-            <button class="menu-btn" onclick="handleSignup()">SUBMIT</button>
-            <p style="color:#666; font-size: 0.9rem; margin-top: 15px;">
-                Already registered? <span style="color:var(--blue); cursor:pointer; font-weight:bold;" onclick="switchAuth('login')">Login</span>
-            </p>
-        </div>
-    </div>
-
-    <div id="login-page" class="modal-overlay">
-        <div class="setup-card">
-            <h2 style="color:#333">Login</h2>
-            <input type="number" id="log-phone" placeholder="Phone Number">
-            <div class="pass-container">
-                <input type="password" id="log-pass" placeholder="Password">
-                <span class="toggle-pass" onclick="togglePassVisibility('log-pass')">👁️</span>
-            </div>
-            <button class="menu-btn" onclick="handleLogin()">LOGIN</button>
-            <p style="color:#666; font-size: 0.9rem; margin-top: 15px;">
-                New user? <span style="color:var(--blue); cursor:pointer; font-weight:bold;" onclick="switchAuth('signup')">Sign Up</span>
-            </p>
-        </div>
-    </div>
-
-    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
-
-    <aside id="sidebar">
-        <div class="sidebar-header">
-            <h2 style="margin:0; color:var(--blue);">Game Menu</h2>
-            <button class="menu-toggle-btn" onclick="toggleSidebar()">✕</button>
-        </div>
-        
-        <div class="sidebar-item" onclick="forceQuit()">
-            <span>🏠</span> Home
-        </div>
-        <div class="sidebar-item" onclick="openProfile()">
-            <span>👤</span> Change Photo / Profile
-        </div>
-        <div class="sidebar-item" onclick="referGame()">
-            <span>🎁</span> Refer
-        </div>
-        <div class="sidebar-item" onclick="shareGame()">
-            <span>📤</span> Share
-        </div>
-        <div class="sidebar-item" onclick="alert('Magic 200 Rules:\n1. Roll dice to move.\n2. Ladders take you UP.\n3. Snakes take you DOWN.\n4. Magic Portals teleport you randomly!\n5. Landing on opponent sends them to 1!\n6. Bonus turn on 10, killing someone, or reaching 200.')">
-            <span>📜</span> Game Rules
-        </div>
-        <div class="sidebar-item" onclick="contactSupport()">
-            <span>🎧</span> Help and Support
-        </div>
-        
-        <div class="sidebar-item" onclick="alert('Version 3.0.1 Pro Edition\nCreated for ultimate fun!')">
-            <span>ℹ</span> About Game
-        </div>
-
-        <div class="sidebar-item" onclick="logoutUser()" style="color: #e74c3c; font-weight: bold;">
-            <span>🚪</span> Logout
-        </div>
-        
-        <div class="sidebar-item" onclick="location.reload()" style="margin-top: auto; border-top: 1px solid #eee;">
-            <span>🔄</span> Restart
-        </div>
-    </aside>
-
-    <header id="main-header" style="display: none;">
-        <div class="header-left">
-            <button class="menu-toggle-btn" onclick="toggleSidebar()">☰</button>
-            <div class="logo" style="font-weight: 900; color: var(--blue); font-size: 1.4rem; letter-spacing: 1px;">MAGIC 200 PRO</div>
-        </div>
-        
-        <div class="wallet-display">
-            🪙 <span id="user-coins">1000</span>
-        </div>
-
-        <div class="profile-btn" onclick="openProfile()">
-            <img id="user-avatar-disp" class="avatar-circle" src="" alt="👤" onerror="this.style.display='none'">
-            <span id="user-name-disp">Guest Player</span>
-        </div>
-    </header>
-
-    <div id="menu" style="display: none;">
-        <h1 class="menu-title">Magic 200</h1>
-        <button class="menu-btn" id="global-match-btn" onclick="showGlobalSetup()">
-            🌐 GLOBAL MATCH (MULTI)
-            <span class="online-tag" id="online-count">Checking...</span>
-        </button>
-        <button class="menu-btn" onclick="startMode('vs')">🤖 VS COMPUTER</button>
-        <button class="menu-btn" onclick="showOfflineSetup()">👥 LOCAL MULTIPLAYER</button>
-    </div>
-
-    <div id="global-setup" class="modal-overlay">
-        <div class="setup-card">
-            <div id="coin-step">
-                <h2 style="color:#333">Select Bet Coins</h2>
-                <div id="coin-selection" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px;">
-                    <div class="coin-btn" onclick="selectCoin(10, this)">10</div>
-                    <div class="coin-btn" onclick="selectCoin(50, this)">50</div>
-                    <div class="coin-btn selected" onclick="selectCoin(100, this)">100</div>
-                    <div class="coin-btn" onclick="selectCoin(200, this)">200</div>
-                    <div class="coin-btn" onclick="selectCoin(500, this)">500</div>
-                    <div class="coin-btn" onclick="selectCoin(1000, this)">1000</div>
+    <div class="modal-overlay" id="dashboard-modal">
+        <div class="modal-card">
+            <span class="modal-close-btn" onclick="closeModal('dashboard-modal')">&times;</span>
+            <h2>Math Merge Data</h2>
+            <div style="text-align: left;">
+                <div class="dashboard-row">
+                    <span>User Name:</span>
+                    <span id="dash-username">-</span>
                 </div>
-                <button class="menu-btn" onclick="startGlobalMatchNow()">START GLOBAL MATCH</button>
-                <button class="menu-btn" style="background:#ccc; color:#333; margin-top:20px;" onclick="hideGlobalSetup()">CLOSE</button>
+                <div class="dashboard-row">
+                    <span>Mobile:</span>
+                    <span id="dash-mobile">****</span>
+                </div>
+                <div class="dashboard-row">
+                    <span>Current Score:</span>
+                    <span id="dash-score">0</span>
+                </div>
+                <div class="dashboard-row">
+                    <span>Current Level:</span>
+                    <span id="dash-level">1</span>
+                </div>
+                <div class="dashboard-row">
+                    <span>Game Mode:</span>
+                    <span id="dash-mode">-</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="profile-modal" class="modal-overlay">
-        <div class="setup-card">
-            <h2 style="color:#333">Edit Profile</h2>
+    <div class="modal-overlay" id="rules-modal">
+        <div class="modal-card">
+            <span class="modal-close-btn" onclick="closeModal('rules-modal')">&times;</span>
+            <h2>Game Rules</h2>
+            <div class="text-modal-content">
+                <h4>In English:</h4>
+                <p>1. Swipe the screen to move and merge similar numbers together.</p>
+                <p>2. Merging two identical numbers creates a bigger number and rewards points.</p>
+                <p>3. In Pro mode, keep track of time. Time is limited for each level!</p>
+                <p>4. Match tiles diagonally, horizontally, or vertically by drawing lines.</p>
+                
+                <h4>हिंदी में:</h4>
+                <p>1. समान नंबरों को एक साथ ले जाने aur जोड़ने के लिए स्क्रीन को स्वाइप करें।</p>
+                <p>2. दो समान नंबरों को मिलाने से एक बड़ा नंबर बनता है और पॉइंट्स मिलते हैं।</p>
+                <p>3. प्रो मोड में समय का ध्यान रखें। प्रत्येक स्तर के लिए समय सीमित है!</p>
+                <p>4. लाइन खींचकर टाइल्स को तिरछा, आड़ा या सीधा मिलाया जा सकता है।</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="terms-modal">
+        <div class="modal-card">
+            <span class="modal-close-btn" onclick="closeModal('terms-modal')">&times;</span>
+            <h2>Terms & Conditions</h2>
+            <div class="text-modal-content">
+                <h4>Game Integrity:</h4>
+                <p>If any user tries to hack the game, modify files, or use illegal cheating scripts to make high scores, their account/ID will be permanently blocked without any prior notice.</p>
+                
+                <h4>गेम अखंडता:</h4>
+                <p>अगर कोई भी यूजर गेम को हैक करने, फाइल्स को मॉडिफाई करने या हाई स्कोर बनाने के लिए अवैध चीटिंग स्क्रिप्ट का इस्तेमाल करेगा, तो उसकी आईडी को बिना किसी पूर्व सूचना के हमेशा के लिए ब्लॉक कर दिया जाएगा।</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="side-menu" id="sidebar-menu">
+        <h3>Game Panel</h3>
+        <button class="side-menu-btn" onclick="openProfileModal()">👤 Profile</button>
+        <button class="side-menu-btn" onclick="alert('Link copied to clipboard! Aap dosto ko share karein.')">🔗 Share Button</button>
+        <button class="side-menu-btn" onclick="alert('Rules: Ek jese numbers ko merge karke bada number banayein. Time limit me score complete karein.')">📜 Game Rules</button>
+        <button class="side-menu-btn" onclick="alert('Support: Aap hume help@mergegame.com par mail kar sakte hain.')">📞 Help and Support</button>
+        <button class="side-menu-btn" onclick="alert('T&C: Yeh game sirf manoranjan ke liye hai. Data aapke device pe save hota hai.')">📋 Term and Conditions</button>
+        <button class="close-menu-btn" onclick="toggleSidebar(false)">Close Menu</button>
+    </div>
+
+    <div class="modal-overlay" id="profile-modal">
+        <div class="modal-card">
+            <span class="modal-close-btn" onclick="closeProfileModal()">&times;</span>
+            <h2>Update Profile</h2>
             
-            <div class="image-upload-wrapper">
-                <img id="profile-preview" src="https://via.placeholder.com/80" alt="Preview">
-                <label class="custom-file-upload">
-                    <input type="file" id="profile-image-input" accept="image/*" style="display:none;" onchange="previewImage(this)">
-                    Choose Photo
-                </label>
+            <div class="profile-pic-container">
+                <img id="profile-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile">
+                <label for="pic-upload" class="upload-btn">Change</label>
+                <input type="file" id="pic-upload" style="display:none;" accept="image/*" onchange="handleProfilePic(this)">
             </div>
 
-            <input type="text" id="profile-name" placeholder="Your Name">
-
-            <h3 style="margin: 15px 0 5px; font-size: 1rem;">Win History</h3>
-            <div class="history-list" id="win-history-list">
-                <div style="text-align:center; color:#999;">No wins yet!</div>
+            <div class="input-group">
+                <label>User Name</label>
+                <input type="text" id="prof-name" placeholder="Apna naya naam">
+            </div>
+            <div class="input-group">
+                <label>Mobile Number</label>
+                <input type="tel" id="prof-mobile" placeholder="Naya Mobile Number" readonly>
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="prof-pass" placeholder="Naya Password set karein">
+                <span class="eye-icon" style="top:25px;" onclick="togglePassVisibility('prof-pass')">👁️</span>
             </div>
             
-            <button class="menu-btn" onclick="saveProfile()" style="margin-top:15px;">SAVE CHANGES</button>
-            <button class="menu-btn" style="background:#ccc; color:#333" onclick="document.getElementById('profile-modal').style.display='none'">CANCEL</button>
+            <button class="auth-btn" onclick="saveProfileChanges()">Save Profile</button>
         </div>
     </div>
 
-    <div id="offline-setup" class="modal-overlay">
-        <div class="setup-card" id="step-1">
-            <h2 style="color:#333">Game Settings</h2>
-            <p style="margin: 0; color: #555;">How many players?</p>
-            <input type="number" id="player-count" min="2" max="6" value="2">
-            
-            <p style="margin: 10px 0 0; color: #555;">How many tokens (Goti)?</p>
-            <div class="token-count-container">
-                <button class="t-btn selected" onclick="selectTokens(1, this)">Single</button>
-                <button class="t-btn" onclick="selectTokens(2, this)">Two</button>
-                <button class="t-btn" onclick="selectTokens(4, this)">Four</button>
+    <div id="auth-overlay">
+        <div class="game-title-box">
+            <h1>MATH MERGE</h1>
+            <span>GAME PORTAL</span>
+        </div>
+
+        <div class="auth-card" id="signup-card">
+            <h2>Sign Up</h2>
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" id="signup-name" placeholder="Apna naam likhein">
             </div>
-
-            <h3 style="color:#333; margin-top: 20px;">Player Names</h3>
-            <div id="name-inputs-list" style="max-height: 180px; overflow-y: auto; margin-bottom: 10px;"></div>
-
-            <button class="menu-btn" onclick="startOfflineGame()">START ADVENTURE</button>
-            <button class="menu-btn" style="background: #ccc; color: #333;" onclick="hideOfflineSetup()">BACK</button>
-        </div>
-    </div>
-
-    <div id="game-container">
-        <div id="board-wrapper">
-            <div id="board"></div>
-            <svg id="game-svg">
-                <defs id="snake-defs">
-                    <pattern id="pythonPatternBase" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
-                        <circle cx="5" cy="5" r="3" fill="rgba(0,0,0,0.4)" />
-                        <circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.1)" />
-                    </pattern>
-                </defs>
-            </svg>
-            <div id="tokens-layer"></div>
-        </div>
-    </div>
-
-    <div id="bottom-panel" style="display:none">
-        <div style="text-align:left; min-width: 120px;">
-            <div id="room-id-label" style="font-size: 0.7rem; color: #777; font-weight: bold;"></div>
-            <div id="turn-label" style="font-weight:800; color:var(--blue); font-size:1.1rem;">Player 1</div>
-            <div id="status-msg" style="font-size:0.85rem; color:#555; font-weight: 500;">Ready to roll?</div>
-            <div class="volume-container" style="margin-top: 5px;">
-                <button class="ui-btn" id="sfx-toggle" style="width:35px; height:35px; font-size:1rem;">🔊</button>
-                <input type="range" id="vol-slider" min="0" max="1" step="0.05" value="0.2">
-                <button class="ui-btn" onclick="quitToMenu()" style="width:35px; height:35px; font-size:1rem; color: #e74c3c;">🏠</button>
+            <div class="input-group">
+                <label>Mobile Number</label>
+                <input type="tel" id="signup-mobile" placeholder="Mobile number dalein">
             </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="signup-pass" placeholder="Password set karein">
+                <span class="eye-icon" onclick="togglePassVisibility('signup-pass')">👁️</span>
+            </div>
+            <button class="auth-btn" onclick="handleSignup()">Register</button>
+            <div class="switch-text">Pehle se account hai? <span onclick="switchAuth('login')">Login karein</span></div>
         </div>
 
-        <div style="display: flex; flex-direction: row; gap: 8px; align-items: center;">
-            <button class="ui-btn" onclick="changeZoom(0.1)" style="width:40px; height:40px; font-weight:bold;">+</button>
-            <button class="ui-btn" onclick="changeZoom(-0.1)" style="width:40px; height:40px; font-weight:bold;">-</button>
+        <div class="auth-card" id="login-card" style="display: none;">
+            <h2>Log In</h2>
+            <div class="input-group">
+                <label>Mobile Number</label>
+                <input type="tel" id="login-mobile" placeholder="Registered mobile number">
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="login-pass" placeholder="Apna password dalein">
+                <span class="eye-icon" onclick="togglePassVisibility('login-pass')">👁️</span>
+                <div class="extra-links">
+                    <span></span>
+                    <span>Forgot your password?</span>
+                </div>
+            </div>
+            <button class="auth-btn" onclick="handleLogin()">Log In</button>
+            <div class="switch-text">Account nahi hai? <span onclick="switchAuth('signup')">Sign Up karein</span></div>
         </div>
+    </div>
+
+    <div id="mode-overlay">
+        <button id="menu-trigger-btn" onclick="toggleLeftSidebar(true)">☰ Menu</button>
         
-        <div class="dice-area" id="dice-trigger">
-            <div class="dice" id="dice">
-                <div class="dice-face f1" id="df-1">1</div>
-                <div class="dice-face f2" id="df-2">2</div>
-                <div class="dice-face f3" id="df-3">3</div>
-                <div class="dice-face f4" id="df-4">4</div>
-                <div class="dice-face f5" id="df-5">5</div>
-                <div class="dice-face f6" id="df-6">6</div>
+        <div class="mode-container">
+            <h2>Select Game Mode</h2>
+            <button class="mode-btn normal-btn" onclick="startGameMode('normal')">Normal Play</button>
+            <button class="mode-btn pro-btn" onclick="startGameMode('pro')">Pro Play</button>
+
+            <div class="highscore-title">🏆 Normal Mode Top Scores 🏆</div>
+            <div class="highscore-row">
+                <div class="hs-box hs-first">
+                    <img class="hs-profile-pic" id="hs-img-1" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="User">
+                    <div class="rank-text">🥇 First</div>
+                    <div class="score-text" id="high-score-1">0</div>
+                    <div class="user-text" id="user-1">-</div>
+                    <div class="mobile-text" id="mob-1">****</div>
+                </div>
+                <div class="hs-box hs-second">
+                    <img class="hs-profile-pic" id="hs-img-2" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="User">
+                    <div class="rank-text">🥈 Second</div>
+                    <div class="score-text" id="high-score-2">0</div>
+                    <div class="user-text" id="user-2">-</div>
+                    <div class="mobile-text" id="mob-2">****</div>
+                </div>
+                <div class="hs-box hs-third">
+                    <img class="hs-profile-pic" id="hs-img-3" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="User">
+                    <div class="rank-text">🥉 Third</div>
+                    <div class="score-text" id="high-score-3">0</div>
+                    <div class="user-text" id="user-3">-</div>
+                    <div class="mobile-text" id="mob-3">****</div>
+                </div>
             </div>
         </div>
-
-        <button id="host-restart-btn" class="ui-btn" onclick="handleHostRestart()" style="font-size: 1.2rem; display:none;">🔄</button>
     </div>
 
-    <div id="win-overlay">
-        <div id="confetti-container"></div>
-        <div id="fireworks-container" style="position:absolute; inset:0; pointer-events:none;"></div>
-        <div id="racket-icon" style="font-size:5rem; position:absolute; top:10%; display:none;">🏸</div>
-        <h1 id="win-msg" style="font-size: 4rem; text-shadow: 0 0 25px gold; margin:0;">VICTORY!</h1>
-        <p id="win-sub" style="font-size: 1.5rem; color: gold; font-weight: bold;"></p>
-        <button class="menu-btn" onclick="forceQuit()" style="margin-top:60px; padding: 10px 30px; font-size: 1rem; width: auto; max-width: 200px;">QUIT TO HOME</button>
+    <div id="game-over-overlay">
+        <h2>GAME OVER</h2>
+        <p id="game-over-msg">Aapka samay samapt ho gaya!</p>
+        <button onclick="resetGame()" style="background-color: #2ecc71; margin-bottom: 10px;">Dobara Khele</button>
+        <button onclick="backToMenuFromGameOver()" style="background-color: #7f8c8d;">Back</button>
     </div>
 
-    <audio id="bg-music" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"></audio>
+    <div class="header">
+        <h1>Merge Math Numbers</h1>
+        <div class="header-stats">
+            <div class="score-container">Score: <span id="score">0</span></div>
+            <div class="stat-box" id="timer-box" style="background-color: #e67e22;">Time: <span id="timer">60</span>s</div>
+            <div class="stat-box" id="level-box" style="background-color: #2ecc71;">Level: <span id="level">1</span></div>
+            <button class="sound-btn" id="sound-toggle" onclick="toggleSound()">🔊 Sound: ON</button>
+            <button class="back-btn" id="back-to-menu" onclick="backToMenu()">⬅ Back</button>
+        </div>
+    </div>
+
+    <div id="grid">
+        <svg id="swipe-canvas">
+            <path id="drawing-line" d="" />
+        </svg>
+
+        <div id="level-up-popup">
+            <h2>LEVEL UP!</h2>
+            <p>Aap Level <span id="popup-level-val">2</span> par aa gaye</p>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="resetGame()">Naya Game</button>
+        <div class="instructions">Mobile me <b>Ungli se swipe</b> karein aur computer me <b>Arrow keys</b> dabayein!</div>
+    </div>
 
     <script>
-        // --- CONFIG & GLOBAL STATE ---
-        const CONFIG = {
-            apiKey: "AIzaSyAAqOJp30w7TEMXG8oHUmMTDpOy8BjboDY",
-            colors: ['#ff5252', '#448aff', '#4caf50', '#ffd740', '#ffab40', '#e040fb', '#ff4081', '#18ffff', '#b2ff59', '#40c4ff'],
-            maxPlayersPerRoom: 10
-        };
+        // APK OPTIMIZATION: Pull-to-Refresh ko JavaScript level par block karne ke liye
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) return; 
+        }, { passive: false });
 
-        let currentPlayerIndex = 0;
-        let players = []; 
-        let isMoving = false;
-        let zoom = 1;
-        let sfxOn = true;
-        let magicPortals = [], snakes = {}, ladders = {};
-        let totalDiceRotation = 0;
-        let userProfileData = { name: "Guest Player", photo: "", coins: 1000, phone: "", password: "", totalWins: 0, winHistory: [] };
-        let activeMovementTimeout = null;
-        let isGlobalMatch = false;
-        let isHost = false;
-        let isWaitingForRestart = false;
-        let selectedBet = 100;
-        let currentRoomId = null;
-        let roomPlayersList = [];
-        let tokensPerPlayer = 1;
-        let currentRollValue = 0;
-
-        const soundEffects = {
-            roll: new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'),
-            move: new Audio('https://assets.mixkit.co/active_storage/sfx/1113/1113-preview.mp3'),
-            win: new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'),
-            snake: new Audio('https://assets.mixkit.co/active_storage/sfx/2405/2405-preview.mp3'),
-            ladder: new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3'),
-            firework: new Audio('https://assets.mixkit.co/active_storage/sfx/588/588-preview.mp3')
-        };
-
-        function initApp() {
-            const loggedIn = localStorage.getItem('magic200_logged_in');
-            if (loggedIn === 'true') {
-                showGameMenu();
-                loadSavedProfile();
-                updateHighScoreTicker();
-            } else {
-                switchAuth('signup');
+        document.addEventListener('touchmove', function(e) {
+            // Screen refresh ko rokne ke liye
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
             }
-            updateOnlineStatus();
-            setInterval(updateOnlineStatus, 5000);
-            document.getElementById('player-count').addEventListener('input', updateNameInputs);
-            
-            // NEW ADDITION: Initialize touch scrolling for mobile to prevent page refresh and slide smoothly
-            initTouchScroll();
-        }
+        }, { passive: false });
 
-        function switchAuth(type) {
-            document.getElementById('signup-page').style.display = (type === 'signup') ? 'flex' : 'none';
-            document.getElementById('login-page').style.display = (type === 'login') ? 'flex' : 'none';
-        }
+        const gridDisplay = document.getElementById('grid');
+        const scoreDisplay = document.getElementById('score');
+        const swipeCanvas = document.getElementById('swipe-canvas');
+        const drawingLine = document.getElementById('drawing-line');
+        const timerDisplay = document.getElementById('timer');
+        const levelDisplay = document.getElementById('level');
+        const gameOverOverlay = document.getElementById('game-over-overlay');
+        const gameOverMsg = document.getElementById('game-over-msg');
+        const levelUpPopup = document.getElementById('level-up-popup');
+        const popupLevelVal = document.getElementById('popup-level-val');
+        const levelBox = document.getElementById('level-box');
+        
+        const size = 6;
+        let squares = [];
+        let score = 0;
+        let level = 1;
+        let timeLeft = 60;
+        let timerId = null;
+        let isGameOver = false;
+        let isSoundOn = true;
+        let audioCtx = null;
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAiAswwCTT03ENPO-oLr3dyac_zuwnUsMY",
+            authDomain: "math-merge-fa42c.firebaseapp.com",
+            projectId: "math-merge-fa42c",
+            storageBucket: "math-merge-fa42c.firebasestorage.app",
+            messagingSenderId: "196288075601",
+            appId: "1:196288075601:web:4b53edcaf71ae171986570",
+            measurementId: "G-H9N3PZ0HCE",
+            databaseURL: "https://math-merge-fa42c-default-rtdb.firebaseio.com/" 
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let gameMode = 'pro'; 
+        let currentUserMobile = null;
+        let normalHighScores = [
+            {score: 0, name: "-", mobile: "****"},
+            {score: 0, name: "-", mobile: "****"},
+            {score: 0, name: "-", mobile: "****"}
+        ];
 
         function togglePassVisibility(id) {
             const input = document.getElementById(id);
-            input.type = (input.type === 'password') ? 'text' : 'password';
+            if (input.type === "password") input.type = "text";
+            else input.type = "password";
+        }
+
+        function switchAuth(type) {
+            if (type === 'login') {
+                document.getElementById('signup-card').style.display = 'none';
+                document.getElementById('login-card').style.display = 'block';
+            } else {
+                document.getElementById('signup-card').style.display = 'block';
+                document.getElementById('login-card').style.display = 'none';
+            }
         }
 
         function handleSignup() {
-            const name = document.getElementById('reg-name').value.trim();
-            const phone = document.getElementById('reg-phone').value.trim();
-            const pass = document.getElementById('reg-pass').value.trim();
-            if (!name || !phone || !pass) { alert("Please fill all fields"); return; }
-            let users = JSON.parse(localStorage.getItem('magic200_users') || "[]");
-            if (users.find(u => u.phone === phone)) { alert("Already Registered this number!"); return; }
-            const newUser = { name, phone, password: pass, coins: 1000, photo: "", totalWins: 0, winHistory: [] };
-            users.push(newUser);
-            localStorage.setItem('magic200_users', JSON.stringify(users));
-            alert("Signup successful! Please Login.");
-            switchAuth('login');
+            const name = document.getElementById('signup-name').value.trim();
+            const mobile = document.getElementById('signup-mobile').value.trim();
+            const pass = document.getElementById('signup-pass').value.trim();
+            if (!name || !mobile || !pass) { alert("Kripya sari details bharein!"); return; }
+            database.ref('users/' + mobile).once('value').then((snapshot) => {
+                if (snapshot.exists()) alert("Yeh mobile number pehle se registered hai!");
+                else {
+                    const now = new Date();
+                    const registrationDate = now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+                    database.ref('users/' + mobile).set({
+                        name: name, mobile: mobile, pass: pass,
+                        profilePic: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+                        registrationDate: registrationDate
+                    }).then(() => { alert("Signup safal raha! Ab login karein."); switchAuth('login'); });
+                }
+            });
         }
 
         function handleLogin() {
-            const phone = document.getElementById('log-phone').value.trim();
-            const pass = document.getElementById('log-pass').value.trim();
-            let users = JSON.parse(localStorage.getItem('magic200_users') || "[]");
-            const user = users.find(u => u.phone === phone && u.password === pass);
-            if (user) {
-                userProfileData = user;
-                if(!userProfileData.winHistory) userProfileData.winHistory = [];
-                if(!userProfileData.totalWins) userProfileData.totalWins = 0;
-                localStorage.setItem('magic200_profile', JSON.stringify(user));
-                localStorage.setItem('magic200_logged_in', 'true');
-                showGameMenu();
-                loadSavedProfile();
-                updateHighScoreTicker();
-            } else { alert("Invalid number or password!"); }
+            const mobile = document.getElementById('login-mobile').value.trim();
+            const pass = document.getElementById('login-pass').value.trim();
+            if (!mobile || !pass) { alert("Sari details bharna zaroori hai!"); return; }
+            database.ref('users/' + mobile).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    const user = snapshot.val();
+                    if (user.pass === pass) {
+                        currentUserMobile = mobile;
+                        localStorage.setItem('currentUserMobile', mobile);
+                        document.getElementById('auth-overlay').style.display = 'none';
+                        document.getElementById('mode-overlay').style.display = 'flex';
+                        fetchGlobalScores(); 
+                    } else alert("Galat Password!");
+                } else alert("Yeh mobile number registered nahi hai!");
+            });
         }
 
-        function showGameMenu() {
-            document.getElementById('signup-page').style.display = 'none';
-            document.getElementById('login-page').style.display = 'none';
-            document.getElementById('main-header').style.display = 'flex';
-            document.getElementById('menu').style.display = 'flex';
-            document.getElementById('high-score-ticker').style.display = 'block';
+        function fetchGlobalScores() {
+            database.ref('globalHighScores').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && Array.isArray(data)) normalHighScores = data;
+                updateHighScoreDisplay();
+            });
         }
 
-        function logoutUser() {
-            if(confirm("Are you sure you want to logout?")) {
-                localStorage.setItem('magic200_logged_in', 'false');
-                location.reload();
+        function updateHighScoreDisplay() {
+            for (let i = 0; i < 3; i++) {
+                const record = normalHighScores[i] || {score: 0, name: "-", mobile: "****", profilePic: "https://cdn-icons-png.flaticon.com/512/149/149071.png"};
+                document.getElementById(`high-score-${i+1}`).innerHTML = record.score;
+                document.getElementById(`user-${i+1}`).innerHTML = record.name;
+                document.getElementById(`mob-${i+1}`).innerHTML = record.mobile;
+                document.getElementById(`hs-img-${i+1}`).src = record.profilePic || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
             }
         }
 
-        function updateOnlineStatus() {
-            const el = document.getElementById('online-count');
-            const btn = document.getElementById('global-match-btn');
-            if (navigator.onLine) {
-                const count = Math.floor(800 + Math.random() * 200);
-                el.innerText = count.toLocaleString() + " Online";
-                el.classList.remove('offline');
-                btn.disabled = false;
-                btn.style.opacity = "1";
-            } else {
-                el.innerText = "OFFLINE";
-                el.classList.add('offline');
-                btn.disabled = true;
-                btn.style.opacity = "0.6";
-            }
-        }
-
-        function showGlobalSetup() { document.getElementById('global-setup').style.display = 'flex'; }
-        function hideGlobalSetup() { document.getElementById('global-setup').style.display = 'none'; }
-        function selectCoin(val, el) {
-            selectedBet = val;
-            document.querySelectorAll('.coin-btn').forEach(b => b.classList.remove('selected'));
-            el.classList.add('selected');
-        }
-
-        function startGlobalMatchNow() {
-            if(userProfileData.coins < selectedBet) { alert("Not enough coins!"); return; }
-            userProfileData.coins -= selectedBet;
-            saveProfile();
-            isGlobalMatch = true;
-            isHost = false;
-            isWaitingForRestart = false;
-            players = [
-                { name: userProfileData.name, positions: [1], color: CONFIG.colors[0], isBot: false, photo: userProfileData.photo, tokenCount: 1 },
-                { name: "Online Opponent", positions: [1], color: CONFIG.colors[1], isBot: true, photo: "", tokenCount: 1 }
-            ];
-            initGame();
-            document.getElementById('room-id-label').innerText = "GLOBAL MATCH";
-        }
-
-        function loadSavedProfile() {
-            const saved = localStorage.getItem('magic200_profile');
-            if(saved) {
-                userProfileData = JSON.parse(saved);
-                document.getElementById('user-name-disp').innerText = userProfileData.name;
-                document.getElementById('profile-name').value = userProfileData.name;
-                document.getElementById('user-coins').innerText = userProfileData.coins || 1000;
-                if(userProfileData.photo) {
-                    const avatar = document.getElementById('user-avatar-disp');
-                    avatar.src = userProfileData.photo;
-                    avatar.style.display = 'block';
-                    document.getElementById('profile-preview').src = userProfileData.photo;
-                }
-                updateWinHistoryUI();
-            }
-        }
-
-        function updateWinHistoryUI() {
-            const list = document.getElementById('win-history-list');
-            if(!userProfileData.winHistory || userProfileData.winHistory.length === 0) {
-                list.innerHTML = '<div style="text-align:center; color:#999;">No wins yet!</div>';
-            } else {
-                list.innerHTML = userProfileData.winHistory.map(h => `
-                    <div class="history-item">
-                        <span>🏆 Win vs ${h.opponent}</span>
-                        <span>${h.date}</span>
-                    </div>
-                `).join('');
-            }
-        }
-
-        function updateHighScoreTicker() {
-            const users = JSON.parse(localStorage.getItem('magic200_users') || "[]");
-            if(users.length > 0) {
-                const topPlayer = users.sort((a, b) => (b.totalWins || 0) - (a.totalWins || 0))[0];
-                if(topPlayer) {
-                    document.getElementById('ticker-text').innerText = `🔥 TOP PLAYER: ${topPlayer.name} with ${topPlayer.totalWins || 0} Wins! 🏆 Join and beat the score! 🎯`;
-                }
-            }
-        }
-
-        function previewImage(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('profile-preview').src = e.target.result;
-                    userProfileData.photo = e.target.result;
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function saveProfile() {
-            const nameInput = document.getElementById('profile-name').value.trim();
-            if(nameInput) userProfileData.name = nameInput;
-            localStorage.setItem('magic200_profile', JSON.stringify(userProfileData));
-            let users = JSON.parse(localStorage.getItem('magic200_users') || "[]");
-            let index = users.findIndex(u => u.phone === userProfileData.phone);
-            if (index !== -1) { users[index] = userProfileData; localStorage.setItem('magic200_users', JSON.stringify(users)); }
-            document.getElementById('user-name-disp').innerText = userProfileData.name;
-            document.getElementById('user-coins').innerText = userProfileData.coins;
-            const avatar = document.getElementById('user-avatar-disp');
-            if(userProfileData.photo) { avatar.src = userProfileData.photo; avatar.style.display = 'block'; }
-            document.getElementById('profile-modal').style.display = 'none';
-            updateHighScoreTicker();
-        }
-
-        document.getElementById('dice-trigger').addEventListener('click', handleRoll);
-        const volSlider = document.getElementById('vol-slider');
-        const bgMusic = document.getElementById('bg-music');
-        volSlider.addEventListener('input', (e) => {
-            bgMusic.volume = e.target.value;
-            if (bgMusic.paused && e.target.value > 0) bgMusic.play().catch(()=>{});
-        });
-
-        const sfxBtn = document.getElementById('sfx-toggle');
-        sfxBtn.addEventListener('click', () => {
-            sfxOn = !sfxOn;
-            sfxBtn.innerText = sfxOn ? "🔊" : "🔇";
-            sfxBtn.style.opacity = sfxOn ? "1" : "0.5";
-        });
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
-        }
-
-        function openProfile() { 
-            document.getElementById('profile-modal').style.display = 'flex'; 
-            document.getElementById('profile-name').value = userProfileData.name;
-            if(userProfileData.photo) document.getElementById('profile-preview').src = userProfileData.photo;
-            updateWinHistoryUI();
-            if(document.getElementById('sidebar').classList.contains('active')) toggleSidebar();
-        }
-
-        function referGame() {
-            const code = "MAGIC" + Math.floor(1000 + Math.random() * 9000);
-            alert("Your Referral Code: " + code + "\nShare this with friends to earn magic coins!");
-        }
-
-        function shareGame() {
-            const shareUrl = "https://imran13144.github.io/Tic-Tac-Toe-Dawnload/";
-            const shareTitle = "Magic 200 Pro - Ultimate 3D Board Game";
-            if (navigator.share) {
-                navigator.share({ title: shareTitle, text: "Play Magic 200 Pro!", url: shareUrl }).catch(() => {});
-            } else { alert("Game Link Copied to Clipboard!\n" + shareUrl); }
-        }
-
-        function contactSupport() { alert("Help & Support:\nEmail: support@magic200pro.com"); }
-
-        function startMode(mode) {
-            isGlobalMatch = false; isHost = false; isWaitingForRestart = false; tokensPerPlayer = 1;
-            if(mode === 'vs') {
-                players = [
-                    { name: userProfileData.name, positions: [1], color: CONFIG.colors[0], isBot: false, photo: userProfileData.photo, tokenCount: 1 },
-                    { name: "CPU AI", positions: [1], color: CONFIG.colors[1], isBot: true, photo: "", tokenCount: 1 }
-                ];
-            }
-            initGame();
-        }
-
-        function showOfflineSetup() { document.getElementById('offline-setup').style.display = 'flex'; updateNameInputs(); }
-        function hideOfflineSetup() { document.getElementById('offline-setup').style.display = 'none'; }
-        function selectTokens(num, el) {
-            tokensPerPlayer = num;
-            document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('selected'));
-            el.classList.add('selected');
-        }
-
-        function updateNameInputs() {
-            const count = Math.min(Math.max(parseInt(document.getElementById('player-count').value), 2), 6);
-            const list = document.getElementById('name-inputs-list');
-            list.innerHTML = "";
-            for(let i=1; i<=count; i++) {
-                let defaultVal = (i===1) ? userProfileData.name : `Player ${i}`;
-                list.innerHTML += `<input type="text" id="pname-${i}" value="${defaultVal}">`;
-            }
-        }
-
-        function startOfflineGame() {
-            const count = parseInt(document.getElementById('player-count').value);
-            players = []; isGlobalMatch = false; isHost = false;
-            for(let i=1; i<=count; i++) {
-                let n = document.getElementById(`pname-${i}`).value.trim() || `Player ${i}`;
-                let posArray = [];
-                for(let t=0; t<tokensPerPlayer; t++) posArray.push(1);
-                players.push({ 
-                    name: n, positions: posArray, color: CONFIG.colors[(i-1)%CONFIG.colors.length], 
-                    isBot: false, photo: (i === 1) ? userProfileData.photo : "", tokenCount: tokensPerPlayer 
+        function checkAndSaveHighScore() {
+            if (!currentUserMobile) return;
+            database.ref('users/' + currentUserMobile).once('value').then((snapshot) => {
+                const activeUser = snapshot.val() || {};
+                const userName = activeUser.name || "Unknown";
+                const lastFourDigits = currentUserMobile.slice(-4);
+                normalHighScores.push({
+                    score: score, name: userName, mobile: "..." + lastFourDigits,
+                    profilePic: activeUser.profilePic || "https://cdn-icons-png.flaticon.com/512/149/149071.png"
                 });
-            }
-            initGame();
-        }
-
-        function initGame() {
-            document.getElementById('main-header').style.display = 'none'; 
-            document.getElementById('menu').style.display = 'none';
-            document.getElementById('offline-setup').style.display = 'none';
-            document.getElementById('global-setup').style.display = 'none';
-            document.getElementById('game-container').style.display = 'block';
-            document.getElementById('bottom-panel').style.display = 'flex';
-            document.getElementById('high-score-ticker').style.display = 'none';
-            generateBoard();
-            generateSpecialTiles();
-            createTokens();
-            updateTurnLabel();
-            updateTokensUI();
-            bgMusic.volume = volSlider.value;
-            bgMusic.play().catch(()=>{});
-            setTimeout(drawLaddersAndSnakes, 600);
-        }
-
-        function forceQuit() {
-            isMoving = false; isGlobalMatch = false;
-            if(activeMovementTimeout) clearTimeout(activeMovementTimeout);
-            bgMusic.pause();
-            document.getElementById('game-container').style.display = 'none';
-            document.getElementById('bottom-panel').style.display = 'none';
-            document.getElementById('main-header').style.display = 'flex';
-            document.getElementById('menu').style.display = 'flex';
-            document.getElementById('win-overlay').style.display = 'none';
-            document.getElementById('high-score-ticker').style.display = 'block';
-            if(document.getElementById('sidebar').classList.contains('active')) toggleSidebar();
-        }
-
-        function quitToMenu() { if(confirm("Are you sure you want to quit?")) forceQuit(); }
-
-        function changeZoom(val) {
-            zoom = Math.max(0.5, Math.min(2, zoom + val));
-            document.getElementById('board-wrapper').style.transform = `scale(${zoom})`;
-        }
-
-        function generateBoard() {
-            const board = document.getElementById('board');
-            board.innerHTML = "";
-            for (let row = 19; row >= 0; row--) {
-                for (let col = 0; col < 10; col++) {
-                    let num = (row % 2 === 0) ? (row * 10) + (10 - col) : (row * 10) + (col + 1);
-                    const box = document.createElement('div');
-                    box.id = `box-${num}`; box.className = 'box';
-                    box.style.background = CONFIG.colors[(num - 1) % 10];
-                    box.innerText = num;
-                    box.style.order = (19 - row) * 10 + col;
-                    if(num === 200) { box.classList.add('finish-box'); box.innerText = "🏆 200"; }
-                    board.appendChild(box);
-                }
-            }
-        }
-
-        function generateSpecialTiles() {
-            ladders = { 3: 22, 15: 44, 28: 84, 50: 91, 78: 122, 105: 146, 120: 180, 150: 192 };
-            snakes = { 25: 5, 48: 12, 62: 18, 98: 70, 130: 101, 160: 140, 188: 152, 197: 165 };
-            magicPortals = [];
-            while(magicPortals.length < 10) {
-                let p = Math.floor(Math.random()*185)+10;
-                if(!ladders[p] && !snakes[p] && !magicPortals.includes(p) && p !== 200) {
-                    magicPortals.push(p);
-                    const el = document.getElementById(`box-${p}`);
-                    if(el) el.classList.add('portal-tile');
-                }
-            }
-        }
-
-        function drawLaddersAndSnakes() {
-            const svg = document.getElementById('game-svg');
-            const defs = document.getElementById('snake-defs');
-            svg.querySelectorAll('g:not(#snake-defs)').forEach(el => el.remove());
-            for(let s in ladders) drawRealisticLadder(svg, s, ladders[s]);
-            const snakeColors = [{body: '#2e7d32', pattern: '#1b5e20'},{body: '#c62828', pattern: '#b71c1c'},{body: '#6a1b9a', pattern: '#4a148c'}];
-            let colorIdx = 0;
-            for(let s in snakes) { drawRealisticSnake(svg, defs, s, snakes[s], snakeColors[colorIdx % snakeColors.length]); colorIdx++; }
-        }
-
-        function drawRealisticLadder(svg, start, end) {
-            const b1 = document.getElementById(`box-${start}`), b2 = document.getElementById(`box-${end}`);
-            if(!b1 || !b2) return;
-            const x1 = b1.offsetLeft + 32, y1 = b1.offsetTop + 32, x2 = b2.offsetLeft + 32, y2 = b2.offsetTop + 32;
-            const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            g.appendChild(createLine(x1-12, y1, x2-12, y2, "#5D4037", 6));
-            g.appendChild(createLine(x1+12, y1, x2+12, y2, "#5D4037", 6));
-            for(let i=1; i<8; i++){
-                let lx = x1 + (x2-x1)*(i/8), ly = y1 + (y2-y1)*(i/8);
-                g.appendChild(createLine(lx-14, ly, lx+14, ly, "#8D6E63", 4));
-            }
-            svg.appendChild(g);
-        }
-
-        function drawRealisticSnake(svg, defs, start, end, colorSet) {
-            const b1 = document.getElementById(`box-${start}`), b2 = document.getElementById(`box-${end}`);
-            if(!b1 || !b2) return;
-            const x1 = b1.offsetLeft + 32, y1 = b1.offsetTop + 32, x2 = b2.offsetLeft + 32, y2 = b2.offsetTop + 32;
-            
-            const gradId = `grad-${start}`;
-            const grad = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
-            grad.id = gradId; grad.setAttribute("x1", "0%"); grad.setAttribute("y1", "0%"); grad.setAttribute("x2", "100%"); grad.setAttribute("y2", "0%");
-            grad.innerHTML = `<stop offset="0%" style="stop-color:${colorSet.body}" /><stop offset="50%" style="stop-color:${colorSet.pattern}" /><stop offset="100%" style="stop-color:${colorSet.body}" />`;
-            defs.appendChild(grad);
-
-            const snakeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            snakeGroup.classList.add('snake-path');
-            
-            const dx = x2 - x1, dy = y2 - y1;
-            const midX1 = x1 + dx * 0.3 + 40, midY1 = y1 + dy * 0.3;
-            const midX2 = x1 + dx * 0.7 - 40, midY2 = y1 + dy * 0.7;
-            const dPath = `M ${x1} ${y1} C ${midX1} ${midY1}, ${midX2} ${midY2}, ${x2} ${y2}`;
-
-            const body = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            body.setAttribute("d", dPath); body.setAttribute("stroke", `url(#${gradId})`); 
-            body.setAttribute("stroke-width", "18"); body.setAttribute("fill", "none"); 
-            body.setAttribute("stroke-linecap", "round");
-            body.setAttribute("filter", "drop-shadow(2px 4px 6px rgba(0,0,0,0.5))");
-            // Realistic Skin Pattern
-            const pattern = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            pattern.setAttribute("d", dPath); pattern.setAttribute("stroke", "url(#pythonPatternBase)");
-            pattern.setAttribute("stroke-width", "18"); pattern.setAttribute("fill", "none"); pattern.setAttribute("stroke-linecap", "round");
-            
-            snakeGroup.appendChild(body);
-            snakeGroup.appendChild(pattern);
-
-            // Realistic Head (Diamond Shape)
-            const head = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            const headD = `M ${x1-14} ${y1} Q ${x1} ${y1-22} ${x1+14} ${y1} Q ${x1} ${y1+10} ${x1-14} ${y1}`;
-            head.setAttribute("d", headD); head.setAttribute("fill", colorSet.body);
-            const angle = Math.atan2(midY1 - y1, midX1 - x1) * 180 / Math.PI;
-            head.setAttribute("transform", `rotate(${angle + 90}, ${x1}, ${y1})`);
-            snakeGroup.appendChild(head);
-
-            // Tongue
-            const tongue = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            tongue.setAttribute("d", `M ${x1} ${y1-12} L ${x1-4} ${y1-22} M ${x1} ${y1-12} L ${x1+4} ${y1-22}`); 
-            tongue.setAttribute("stroke", "#ff1744"); tongue.setAttribute("stroke-width", "2");
-            tongue.setAttribute("transform", `rotate(${angle + 90}, ${x1}, ${y1})`);
-            snakeGroup.appendChild(tongue);
-
-            // Glowing Snake Eyes
-            const eye1 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            eye1.setAttribute("cx", x1-6); eye1.setAttribute("cy", y1-8); eye1.setAttribute("r", "3");
-            eye1.classList.add('snake-eye');
-            eye1.setAttribute("transform", `rotate(${angle + 90}, ${x1}, ${y1})`);
-            
-            const eye2 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            eye2.setAttribute("cx", x1+6); eye2.setAttribute("cy", y1-8); eye2.setAttribute("r", "3");
-            eye2.classList.add('snake-eye');
-            eye2.setAttribute("transform", `rotate(${angle + 90}, ${x1}, ${y1})`);
-
-            snakeGroup.appendChild(eye1);
-            snakeGroup.appendChild(eye2);
-
-            svg.appendChild(snakeGroup);
-        }
-
-        function createLine(x1,y1,x2,y2,c,w){
-            const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            l.setAttribute("x1",x1); l.setAttribute("y1",y1); l.setAttribute("x2",x2); l.setAttribute("y2",y2);
-            l.setAttribute("stroke",c); l.setAttribute("stroke-width",w); l.setAttribute("stroke-linecap","round");
-            return l;
-        }
-
-        function createTokens() {
-            const layer = document.getElementById('tokens-layer'); layer.innerHTML = "";
-            players.forEach((p, i) => {
-                for(let tNum = 0; tNum < (p.tokenCount||1); tNum++) {
-                    const t = document.createElement('div');
-                    t.id = `token-${i}-${tNum}`; t.className = 'token';
-                    let style = `background-color:${p.color};`;
-                    if(p.photo) style += `background-image:url(${p.photo});`;
-                    t.innerHTML = `<div class="horse"><div class="horse-body" style="${style}"></div><div class="horse-base"></div></div>`;
-                    t.onclick = () => handleTokenClick(i, tNum);
-                    layer.appendChild(t);
-                }
+                normalHighScores.sort((a, b) => b.score - a.score);
+                normalHighScores = normalHighScores.slice(0, 3);
+                database.ref('globalHighScores').set(normalHighScores);
             });
         }
 
-        async function handleRoll() {
-            if (isMoving || isWaitingForRestart) return;
-            isMoving = true; playSound('roll');
-            const val = Math.floor(Math.random() * 10) + 1;
-            currentRollValue = val;
-            
-            for(let i=1; i<=6; i++) {
-                const face = document.getElementById(`df-${i}`);
-                if(i === 1) face.innerText = val;
-                else face.innerText = Math.floor(Math.random() * 10) + 1;
-            }
-
-            const dice = document.getElementById('dice');
-            totalDiceRotation += 720;
-            dice.style.transform = `rotateX(${totalDiceRotation}deg) rotateY(${totalDiceRotation}deg)`;
-            await new Promise(r => setTimeout(r, 1500));
-            
-            prepareTokenSelection();
+        function startGameMode(mode) {
+            gameMode = mode;
+            document.getElementById('mode-overlay').style.display = 'none';
+            document.getElementById('timer-box').style.display = (mode === 'normal') ? 'none' : 'block';
+            resetGame();
         }
 
-        function prepareTokenSelection() {
-            const p = players[currentPlayerIndex];
-            let canMoveAtLeastOne = false;
-            
-            for(let tNum = 0; tNum < (p.tokenCount||1); tNum++) {
-                if(p.positions[tNum] + currentRollValue <= 200 && p.positions[tNum] < 200) {
-                    const tEl = document.getElementById(`token-${currentPlayerIndex}-${tNum}`);
-                    if(tEl) tEl.classList.add('token-selectable');
-                    canMoveAtLeastOne = true;
-                }
-            }
-
-            if(!canMoveAtLeastOne) {
-                document.getElementById('status-msg').innerText = "No moves possible!";
-                setTimeout(nextTurn, 1000);
-            } else {
-                document.getElementById('status-msg').innerText = "Select a token to move!";
-                if(p.isBot) {
-                    setTimeout(() => {
-                        for(let t=0; t<p.tokenCount; t++) {
-                            if(p.positions[t] + currentRollValue <= 200 && p.positions[t] < 200) {
-                                handleTokenClick(currentPlayerIndex, t);
-                                break;
-                            }
-                        }
-                    }, 800);
-                }
-            }
-        }
-
-        async function handleTokenClick(pIdx, tIdx) {
-            if(pIdx !== currentPlayerIndex) return;
-            const tEl = document.getElementById(`token-${pIdx}-${tIdx}`);
-            if(!tEl || !tEl.classList.contains('token-selectable')) return;
-
-            document.querySelectorAll('.token').forEach(t => t.classList.remove('token-selectable'));
-            
-            const startPos = players[pIdx].positions[tIdx];
-            const kill = await movePlayerToken(pIdx, tIdx, currentRollValue);
-            const endPos = players[pIdx].positions[tIdx];
-
-            let reachedFinishInThisTurn = (startPos < 200 && endPos === 200);
-
-            if (players[pIdx].positions.every(pos => pos === 200)) { 
-                doWin(players[pIdx].name); 
-                return; 
-            }
-
-            // Bonus logic: 10 roll, killing someone, or reaching 200
-            if (currentRollValue === 10 || kill || reachedFinishInThisTurn) {
-                document.getElementById('status-msg').innerText = "BONUS TURN! 🎯";
-                isMoving = false;
-                if(players[currentPlayerIndex].isBot) setTimeout(handleRoll, 1000);
-            } else {
-                nextTurn();
-            }
-        }
-
-        function nextTurn() {
-            currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-            updateTurnLabel();
-            isMoving = false;
-            if(players[currentPlayerIndex].isBot) setTimeout(handleRoll, 1000);
-        }
-
-        async function movePlayerToken(pIdx, tIdx, steps) {
-            let p = players[pIdx];
-            let target = p.positions[tIdx] + steps;
-            if (target > 200) return false;
-
-            for (let i = p.positions[tIdx] + 1; i <= target; i++) {
-                p.positions[tIdx] = i; playSound('move'); updateTokensUI();
-                await new Promise(r => setTimeout(r, 350));
-            }
-            
-            if (snakes[p.positions[tIdx]]) { p.positions[tIdx] = snakes[p.positions[tIdx]]; playSound('snake'); }
-            else if (ladders[p.positions[tIdx]]) { p.positions[tIdx] = ladders[p.positions[tIdx]]; playSound('ladder'); }
-            else if (magicPortals.includes(p.positions[tIdx])) {
-                let randTarget = Math.floor(Math.random() * 198) + 2;
-                p.positions[tIdx] = randTarget;
-                playSound('ladder'); 
-            }
-            updateTokensUI();
-
-            let kill = false;
-            players.forEach((other, oi) => {
-                if(oi !== pIdx) {
-                    other.positions.forEach((oPos, otIdx) => {
-                        if(oPos === p.positions[tIdx] && oPos > 1 && oPos < 200) {
-                            other.positions[otIdx] = 1; kill = true;
-                        }
-                    });
-                }
-            });
-            if(kill) updateTokensUI();
-            return kill;
-        }
-
-        function updateTurnLabel() { 
-            const p = players[currentPlayerIndex];
-            document.getElementById('turn-label').innerText = p.name;
-            document.getElementById('turn-label').style.color = p.color;
-            document.getElementById('status-msg').innerText = p.name === userProfileData.name ? "YOUR Turn!" : "Waiting...";
-        }
-
-        function updateTokensUI() {
-            players.forEach((p, i) => {
-                for(let tNum = 0; tNum < (p.tokenCount||1); tNum++) {
-                    const t = document.getElementById(`token-${i}-${tNum}`);
-                    const box = document.getElementById(`box-${p.positions[tNum]}`);
-                    if (box && t) {
-                        t.style.left = (box.offsetLeft + 5 + (i*4) + (tNum*2)) + "px";
-                        t.style.top = (box.offsetTop + 5 + (tNum*2)) + "px";
-                        if(p.positions[tNum] === 200) t.style.opacity = "0.5";
-                    }
-                }
-            });
-        }
-
-        function playSound(n) { if(sfxOn && soundEffects[n]) { soundEffects[n].currentTime = 0; soundEffects[n].play().catch(()=>{}); }}
+        function backToMenu() { clearInterval(timerId); checkAndSaveHighScore(); document.getElementById('mode-overlay').style.display = 'flex'; }
+        function backToMenuFromGameOver() { gameOverOverlay.style.display = 'none'; document.getElementById('mode-overlay').style.display = 'flex'; }
+        function toggleSidebar(show) { const sidebar = document.getElementById('sidebar-menu'); if (show) sidebar.classList.add('active'); else sidebar.classList.remove('active'); }
         
-        function doWin(n) { 
-            playSound('win'); 
-            const overlay = document.getElementById('win-overlay');
-            document.getElementById('win-msg').innerText = n.toUpperCase() + " WON!";
-            
-            if(n === userProfileData.name) {
-                userProfileData.totalWins = (userProfileData.totalWins || 0) + 1;
-                const winEntry = {
-                    opponent: players.find(p => p.name !== userProfileData.name).name,
-                    date: new Date().toLocaleDateString(),
-                    timestamp: Date.now()
-                };
-                if(!userProfileData.winHistory) userProfileData.winHistory = [];
-                userProfileData.winHistory.unshift(winEntry);
-                
-                if(isGlobalMatch) {
-                    let reward = selectedBet * 2;
-                    userProfileData.coins += reward;
+        function openProfileModal() {
+            toggleSidebar(false);
+            if (!currentUserMobile) return;
+            database.ref('users/' + currentUserMobile).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    const user = snapshot.val();
+                    document.getElementById('prof-name').value = user.name;
+                    document.getElementById('prof-mobile').value = user.mobile;
+                    document.getElementById('prof-pass').value = user.pass;
+                    document.getElementById('profile-img').src = user.profilePic || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+                    document.getElementById('profile-modal').style.display = 'flex';
                 }
-                saveProfile();
-            }
-
-            if(isGlobalMatch && n === userProfileData.name) {
-                let reward = selectedBet * 2;
-                document.getElementById('win-sub').innerText = `Victory! You won ${reward} coins!`;
-            } else {
-                document.getElementById('win-sub').innerText = "All tokens reached the destination!";
-            }
-            
-            overlay.style.display = 'flex'; 
-
-            const container = document.getElementById('confetti-container');
-            container.innerHTML = '';
-            for(let i=0; i<100; i++) {
-                const conf = document.createElement('div');
-                conf.className = 'confetti';
-                conf.style.left = Math.random() * 100 + 'vw';
-                conf.style.backgroundColor = CONFIG.colors[Math.floor(Math.random() * CONFIG.colors.length)];
-                conf.style.animationDelay = Math.random() * 3 + 's';
-                container.appendChild(conf);
-            }
-
-            // Firework & Racket Animation
-            const fwContainer = document.getElementById('fireworks-container');
-            const racket = document.getElementById('racket-icon');
-            racket.style.display = 'block';
-            racket.classList.add('racket-anim');
-            
-            let fwCount = 0;
-            const fwInterval = setInterval(() => {
-                if(fwCount >= 10) { clearInterval(fwInterval); return; }
-                const fw = document.createElement('div');
-                fw.className = 'firework';
-                fw.style.left = Math.random() * 100 + '%';
-                fw.style.top = Math.random() * 100 + '%';
-                fw.style.backgroundColor = CONFIG.colors[Math.floor(Math.random() * 10)];
-                fwContainer.appendChild(fw);
-                playSound('firework');
-                setTimeout(() => fw.remove(), 1000);
-                fwCount++;
-            }, 500);
+            });
         }
 
-        // NEW ADDITION: Function to handle touch based sliding on game board
-        function initTouchScroll() {
-            const container = document.getElementById('game-container');
-            let startY = 0;
-            let startX = 0;
-            let scrollTop = 0;
-            let scrollLeft = 0;
-
-            container.addEventListener('touchstart', (e) => {
-                startY = e.touches[0].pageY - container.offsetTop;
-                startX = e.touches[0].pageX - container.offsetLeft;
-                scrollTop = container.scrollTop;
-                scrollLeft = container.scrollLeft;
-            }, { passive: true });
-
-            container.addEventListener('touchmove', (e) => {
-                const y = e.touches[0].pageY - container.offsetTop;
-                const x = e.touches[0].pageX - container.offsetLeft;
-                const walkY = (y - startY); 
-                const walkX = (x - startX); 
-                
-                // Scrolling the container smoothly
-                container.scrollTop = scrollTop - walkY;
-                container.scrollLeft = scrollLeft - walkX;
-            }, { passive: true });
+        function closeProfileModal() { document.getElementById('profile-modal').style.display = 'none'; }
+        function handleProfilePic(input) { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = (e) => document.getElementById('profile-img').src = e.target.result; reader.readAsDataURL(input.files[0]); } }
+        
+        function saveProfileChanges() {
+            const newName = document.getElementById('prof-name').value.trim();
+            const newPass = document.getElementById('prof-pass').value.trim();
+            const profilePicData = document.getElementById('profile-img').src;
+            if (!newName || !newPass) { alert("Details khali nahi ho sakte!"); return; }
+            database.ref('users/' + currentUserMobile).update({ name: newName, pass: newPass, profilePic: profilePicData }).then(() => { alert("Profile update ho gayi!"); closeProfileModal(); });
         }
+
+        function toggleLeftSidebar(show) { const sidebar = document.getElementById('left-sidebar-menu'); if (show) sidebar.classList.add('active'); else sidebar.classList.remove('active'); }
+        function openProfileModalFromSidebar() { toggleLeftSidebar(false); openProfileModal(); }
+        function handleShareLink() { const link = "https://imran13144.github.io/Tic-Tac-Toe-Dawnload/"; navigator.clipboard.writeText(link).then(() => alert('Link copied!')); }
+        function openGameRules() { document.getElementById('rules-modal').style.display = 'flex'; }
+        function openTermConditions() { document.getElementById('terms-modal').style.display = 'flex'; }
+        function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
+        function openWhatsAppHelp() { window.open("https://wa.me/+966578913144", '_blank'); }
+        
+        function handleLogout() {
+            if (confirm("Log out?")) { localStorage.removeItem('currentUserMobile'); currentUserMobile = null; toggleLeftSidebar(false); document.getElementById('mode-overlay').style.display = 'none'; document.getElementById('auth-overlay').style.display = 'flex'; switchAuth('login'); }
+        }
+        
+        function openMathMergeDashboard() {
+            toggleLeftSidebar(false);
+            document.getElementById('dash-score').innerHTML = score;
+            document.getElementById('dash-level').innerHTML = level;
+            document.getElementById('dash-mode').innerHTML = gameMode.toUpperCase();
+            database.ref('users/' + currentUserMobile).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    const user = snapshot.val();
+                    document.getElementById('dash-username').innerHTML = user.name;
+                    document.getElementById('dash-mobile').innerHTML = user.mobile;
+                }
+                document.getElementById('dashboard-modal').style.display = 'flex';
+            });
+        }
+
+        function initAudioContext() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        function toggleSound() { isSoundOn = !isSoundOn; const btn = document.getElementById('sound-toggle'); btn.innerHTML = isSoundOn ? "🔊 Sound: ON" : "🔈 Sound: OFF"; btn.style.background = isSoundOn ? "#9b59b6" : "#95a5a6"; }
+
+        function playSwipeSoundLoud() {
+            if (!isSoundOn) return; initAudioContext();
+            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.08);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+            osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+        }
+
+        function playJoinSoundLoud() {
+            if (!isSoundOn) return; initAudioContext();
+            const osc1 = audioCtx.createOscillator(); const osc2 = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+            osc1.type = 'sine'; osc2.type = 'square'; osc1.frequency.setValueAtTime(500, audioCtx.currentTime); osc2.frequency.setValueAtTime(1000, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+            osc1.connect(gain); osc2.connect(gain); gain.connect(audioCtx.destination); osc1.start(); osc2.start(); osc1.stop(audioCtx.currentTime + 0.3); osc2.stop(audioCtx.currentTime + 0.3);
+        }
+
+        function playLevelUpSound() {
+            if (!isSoundOn) return; const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const playBeep = (freq, startTime, duration) => { const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = 'triangle'; osc.frequency.setValueAtTime(freq, startTime); gain.gain.setValueAtTime(0.1, startTime); gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(startTime); osc.stop(startTime + duration); };
+            playBeep(400, audioCtx.currentTime, 0.15); playBeep(600, audioCtx.currentTime + 0.15, 0.15); playBeep(800, audioCtx.currentTime + 0.30, 0.3);
+        }
+
+        function createBoard() {
+            const svgLayer = document.getElementById('swipe-canvas');
+            gridDisplay.innerHTML = ''; gridDisplay.appendChild(svgLayer);
+            squares = [];
+            for (let i = 0; i < size * size; i++) {
+                let cell = document.createElement('div'); cell.classList.add('cell');
+                let randomVal = getNewTileValue(); cell.innerHTML = randomVal; cell.classList.add('n' + randomVal);
+                gridDisplay.appendChild(cell); squares.push(cell);
+            }
+        }
+
+        function getNewTileValue() {
+            let val; let attempts = 0;
+            while (attempts < 50) {
+                val = Math.floor(Math.random() * 5) + 1;
+                if (level >= 10 && val === 9) { attempts++; continue; }
+                if (level >= 9 && val === 8) { attempts++; continue; }
+                if (level >= 8 && val === 7) { attempts++; continue; }
+                if (level >= 7 && val === 6) { attempts++; continue; }
+                if (level >= 6 && val === 5) { attempts++; continue; }
+                if (level >= 5 && val === 4) { attempts++; continue; }
+                if (level >= 4 && val === 3) { attempts++; continue; }
+                if (level >= 3 && val === 2) { attempts++; continue; }
+                if (level >= 2 && val === 1) { attempts++; continue; }
+                return val;
+            }
+            return level + 1;
+        }
+
+        function refillGrid() {
+            let emptySpaces = false;
+            for (let i = 0; i < squares.length; i++) {
+                if (squares[i].innerHTML === '' || squares[i].innerHTML === '0') {
+                    let randomVal = getNewTileValue(); squares[i].innerHTML = randomVal; emptySpaces = true;
+                }
+            }
+            updateStyles(); return emptySpaces;
+        }
+
+        function startTimerSystem() { clearInterval(timerId); if (gameMode === 'normal') return; timerId = setInterval(() => { if (!isGameOver) { timeLeft--; timerDisplay.innerHTML = timeLeft; if (timeLeft <= 0) triggerGameOver("timeout"); } }, 1000); }
+        function resetTimerForCurrentLevel() { if (gameMode === 'normal') return; if (level === 1) timeLeft = 60; else if (level === 2) timeLeft = 50; else if (level === 3) timeLeft = 40; else if (level === 4) timeLeft = 30; else if (level === 5) timeLeft = 20; else timeLeft = 10; timerDisplay.innerHTML = timeLeft; }
+
+        function removeBlockedTilesFromBoard() {
+            for (let i = 0; i < squares.length; i++) {
+                let currentVal = parseInt(squares[i].innerHTML); let isBlocked = false;
+                if (level >= 10 && currentVal === 9) isBlocked = true;
+                if (level >= 9 && currentVal === 8) isBlocked = true;
+                if (level >= 8 && currentVal === 7) isBlocked = true;
+                if (level >= 7 && currentVal === 6) isBlocked = true;
+                if (level >= 6 && currentVal === 5) isBlocked = true;
+                if (level >= 5 && currentVal === 4) isBlocked = true;
+                if (level >= 4 && currentVal === 3) isBlocked = true;
+                if (level >= 3 && currentVal === 2) isBlocked = true;
+                if (level >= 2 && currentVal === 1) isBlocked = true;
+                if (isBlocked) { squares[i].innerHTML = getNewTileValue(); squares[i].style.transform = 'scale(0.2)'; setTimeout(() => squares[i].style.transform = 'scale(1)', 50); }
+            }
+            updateStyles();
+        }
+
+        function showLevelUpPopup() {
+            popupLevelVal.innerHTML = level; playLevelUpSound();
+            levelBox.classList.add('level-scroll-anim'); setTimeout(() => levelBox.classList.remove('level-scroll-anim'), 1000);
+            levelUpPopup.style.display = 'block'; setTimeout(() => levelUpPopup.classList.add('active'), 10);
+            setTimeout(() => { levelUpPopup.classList.remove('active'); setTimeout(() => levelUpPopup.style.display = 'none', 500); }, 1500);
+        }
+
+        function checkLevelProgression() {
+            let oldLevel = level;
+            if (score >= 5500) level = 10; else if (score >= 3400) level = 9; else if (score >= 2100) level = 8; else if (score >= 1300) level = 7; else if (score >= 800) level = 6; else if (score >= 500) level = 5; else if (score >= 300) level = 4; else if (score >= 200) level = 3; else if (score >= 100) level = 2;
+            levelDisplay.innerHTML = level;
+            if (oldLevel !== level) { resetTimerForCurrentLevel(); showLevelUpPopup(); removeBlockedTilesFromBoard(); }
+        }
+
+        function triggerGameOver(reason) { isGameOver = true; clearInterval(timerId); checkAndSaveHighScore(); gameOverMsg.innerHTML = (reason === "timeout") ? "Aapka samay samapt ho gaya!" : "Koi move baki nahi hai!"; gameOverOverlay.style.display = 'flex'; }
+
+        function moveLeft() { let moved = false; for (let i = 0; i < size * size; i++) { if (i % size === 0) { let row = []; for (let j = 0; j < size; j++) row.push(parseInt(squares[i+j].innerHTML) || 0); let original = row.join(','); let filtered = row.filter(n => n); let newRow = filtered.concat(Array(size - filtered.length).fill('')); for (let j = 0; j < size; j++) squares[i+j].innerHTML = newRow[j]; if(original !== newRow.join(',')) moved = true; } } return moved; }
+        function moveRight() { let moved = false; for (let i = 0; i < size * size; i++) { if (i % size === 0) { let row = []; for (let j = 0; j < size; j++) row.push(parseInt(squares[i+j].innerHTML) || 0); let original = row.join(','); let filtered = row.filter(n => n); let newRow = Array(size - filtered.length).fill('').concat(filtered); for (let j = 0; j < size; j++) squares[i+j].innerHTML = newRow[j]; if(original !== newRow.join(',')) moved = true; } } return moved; }
+        function moveDown() { let moved = false; for (let i = 0; i < size; i++) { let col = []; for (let j = 0; j < size; j++) col.push(parseInt(squares[i+(j*size)].innerHTML) || 0); let original = col.join(','); let filtered = col.filter(n => n); let newCol = Array(size - filtered.length).fill('').concat(filtered); for (let j = 0; j < size; j++) squares[i+(j*size)].innerHTML = newCol[j]; if(original !== newCol.join(',')) moved = true; } return moved; }
+        function moveUp() { let moved = false; for (let i = 0; i < size; i++) { let col = []; for (let j = 0; j < size; j++) col.push(parseInt(squares[i+(j*size)].innerHTML) || 0); let original = col.join(','); let filtered = col.filter(n => n); let newCol = filtered.concat(Array(size - filtered.length).fill('')); for (let j = 0; j < size; j++) squares[i+(j*size)].innerHTML = newCol[j]; if(original !== newCol.join(',')) moved = true; } return moved; }
+
+        function combineRow() { for (let i = 0; i < (size * size) - 1; i++) { if ((i+1) % size !== 0 && squares[i].innerHTML === squares[i+1].innerHTML && squares[i].innerHTML !== '') { let total = parseInt(squares[i].innerHTML) + parseInt(squares[i+1].innerHTML); squares[i].innerHTML = total; squares[i+1].innerHTML = ''; score += total; scoreDisplay.innerHTML = score; checkLevelProgression(); triggerPopEffect(squares[i]); } } updateStyles(); }
+        function combineColumn() { for (let i = 0; i < size * (size - 1); i++) { if (squares[i].innerHTML === squares[i+size].innerHTML && squares[i].innerHTML !== '') { let total = parseInt(squares[i].innerHTML) + parseInt(squares[i+size].innerHTML); squares[i].innerHTML = total; squares[i+size].innerHTML = ''; score += total; scoreDisplay.innerHTML = score; checkLevelProgression(); triggerPopEffect(squares[i]); } } updateStyles(); }
+        
+        function triggerPopEffect(element) { const existing = document.querySelector('.pop-effect'); if (existing) existing.classList.remove('pop-effect'); element.classList.add('pop-effect'); }
+
+        function updateStyles() { for (let i = 0; i < squares.length; i++) { let glow = squares[i].classList.contains('pop-effect'); squares[i].className = 'cell'; let val = squares[i].innerHTML; if (val !== '' && val !== '0') squares[i].classList.add('n' + val); if(glow) squares[i].classList.add('pop-effect'); } }
+
+        function control(e) { if (isGameOver) return; let acted = false; if (e.keyCode === 37) { moveLeft(); combineRow(); moveLeft(); acted = true; } else if (e.keyCode === 38) { moveUp(); combineColumn(); moveUp(); acted = true; } else if (e.keyCode === 39) { moveRight(); combineRow(); moveRight(); acted = true; } else if (e.keyCode === 40) { moveDown(); combineColumn(); moveDown(); acted = true; } if(acted) { resetTimerForCurrentLevel(); setTimeout(() => { refillGrid(); if (gameMode === 'normal') checkAvailableMoves(); }, 100); } }
+        document.addEventListener('keyup', control);
+
+        let selectedPath = []; let isSwiping = false; let currentValue = null;
+        function getCellIndexFromPoint(x, y) { const rect = gridDisplay.getBoundingClientRect(); if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) return null; const col = Math.floor((x - rect.left) / (rect.width / size)); const row = Math.floor((y - rect.top) / (rect.height / size)); if (col >= 0 && col < size && row >= 0 && row < size) return row * size + col; return null; }
+        
+        function updateSwipeLine() { if (selectedPath.length < 1) { drawingLine.style.opacity = '0'; return; } drawingLine.style.opacity = '1'; const rect = gridDisplay.getBoundingClientRect(); let d = ''; selectedPath.forEach((idx, i) => { const cRect = squares[idx].getBoundingClientRect(); const cx = cRect.left - rect.left + cRect.width / 2; const cy = cRect.top - rect.top + cRect.height / 2; if (i === 0) d += `M ${cx} ${cy}`; else d += ` L ${cx} ${cy}`; }); drawingLine.setAttribute('d', d); }
+
+        function handleSwipeMove(clientX, clientY) {
+            if (!isSwiping || isGameOver) return;
+            const idx = getCellIndexFromPoint(clientX, clientY);
+            if (idx !== null) {
+                const val = squares[idx].innerHTML;
+                if (val !== '' && val !== '0') {
+                    if (selectedPath.length === 0) { currentValue = val; selectedPath.push(idx); squares[idx].classList.add('selected-cell'); playSwipeSoundLoud(); }
+                    else if (selectedPath.length >= 2 && idx === selectedPath[selectedPath.length - 2]) { let rem = selectedPath.pop(); squares[rem].classList.remove('selected-cell'); updateSwipeLine(); playSwipeSoundLoud(); }
+                    else if (val === currentValue && !selectedPath.includes(idx)) {
+                        const last = selectedPath[selectedPath.length - 1];
+                        if (Math.abs(Math.floor(last/size) - Math.floor(idx/size)) <= 1 && Math.abs((last%size) - (idx%size)) <= 1) { selectedPath.push(idx); squares[idx].classList.add('selected-cell'); playSwipeSoundLoud(); }
+                    }
+                    updateSwipeLine();
+                }
+            }
+        }
+
+        function endSwipe() {
+            if (!isSwiping || isGameOver) return; isSwiping = false; drawingLine.style.opacity = '0'; drawingLine.setAttribute('d', '');
+            selectedPath.forEach(idx => squares[idx].classList.remove('selected-cell'));
+            if (selectedPath.length >= 2) {
+                let total = 0; let lastIdx = selectedPath[selectedPath.length - 1];
+                selectedPath.forEach(idx => { total += parseInt(squares[idx].innerHTML); squares[idx].innerHTML = ''; });
+                squares[lastIdx].innerHTML = total; score += total; scoreDisplay.innerHTML = score;
+                checkLevelProgression(); triggerPopEffect(squares[lastIdx]); playJoinSoundLoud(); resetTimerForCurrentLevel();
+                setTimeout(() => { refillGrid(); if (gameMode === 'normal') checkAvailableMoves(); }, 150);
+            }
+            selectedPath = []; currentValue = null; updateStyles();
+        }
+
+        function checkAvailableMoves() {
+            for (let i = 0; i < squares.length; i++) if (squares[i].innerHTML === '' || squares[i].innerHTML === '0') return;
+            const dirs = [{r:0,c:1},{r:1,c:0},{r:1,c:1},{r:1,c:-1},{r:-1,c:0},{r:0,c:-1},{r:-1,c:-1},{r:-1,c:1}];
+            for (let i = 0; i < squares.length; i++) {
+                const val = squares[i].innerHTML; const r = Math.floor(i/size), c = i%size;
+                for (let d of dirs) { const nr = r+d.r, nc = c+d.c; if(nr>=0 && nr<size && nc>=0 && nc<size && squares[nr*size+nc].innerHTML === val) return; }
+            }
+            triggerGameOver("nomoves");
+        }
+
+        gridDisplay.addEventListener('touchstart', (e) => { isSwiping = true; handleSwipeMove(e.touches[0].clientX, e.touches[0].clientY); }, false);
+        gridDisplay.addEventListener('touchmove', (e) => handleSwipeMove(e.touches[0].clientX, e.touches[0].clientY), false);
+        gridDisplay.addEventListener('touchend', endSwipe, false);
+        gridDisplay.addEventListener('mousedown', (e) => { isSwiping = true; handleSwipeMove(e.clientX, e.clientY); });
+        document.addEventListener('mousemove', (e) => { if(isSwiping) handleSwipeMove(e.clientX, e.clientY); });
+        document.addEventListener('mouseup', endSwipe);
+
+        function resetGame() { score = 0; level = 1; timeLeft = 60; isGameOver = false; scoreDisplay.innerHTML = 0; levelDisplay.innerHTML = 1; timerDisplay.innerHTML = 60; gameOverOverlay.style.display = 'none'; levelUpPopup.style.display = 'none'; createBoard(); startTimerSystem(); }
+        createBoard();
+
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('currentUserMobile');
+            if (saved) { database.ref('users/' + saved).once('value').then((snap) => { if (snap.exists()) { currentUserMobile = saved; document.getElementById('auth-overlay').style.display = 'none'; document.getElementById('mode-overlay').style.display = 'flex'; fetchGlobalScores(); } }); }
+        });
     </script>
 </body>
 </html>
